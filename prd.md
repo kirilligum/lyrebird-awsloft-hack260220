@@ -2,7 +2,7 @@ Explanation (how this PRD reflects your decisions)
 
 This PRD locks in the Lyrebird concept (“log → factual song”) with your renamed Egg widget and a CopilotKit-first Generative UI approach. The system is designed as a production-grade pipeline: a Python Strands Agents backend deployed on Amazon Bedrock AgentCore Runtime, orchestrated by an explicit AWS Step Functions state machine, with strict internal structured-output enforcement (schemas + validation/repair) even though the UI will not expose JSON.
 
-For the initial hackathon demo input, Lyrebird will generate a fictional hackathon chat (repeatable, safe), while still preserving a path for “real” ingestion later (e.g., Discord API). The “song” stage uses Gemini API music generation via Lyria RealTime, which is experimental and streams music over WebSockets; Lyrebird treats the result as a “song experience” (instrumental audio + factual lyrics displayed, with optional spoken overlay as a stretch goal).
+For the initial hackathon demo input, Lyrebird will generate a fictional hackathon chat (repeatable, safe), while still preserving a path for “real” ingestion later (e.g., Discord API). The “song” stage uses MiniMax Music Generation (`POST /v1/music_generation`, `model: music-2.5`) with optional streaming (`stream=true`) and URL/hex audio responses; Lyrebird treats the result as a “song experience” (generated audio + factual lyrics displayed, with optional spoken overlay as a stretch goal).
 
 PRD: Lyrebird — “log → factual song”
 
@@ -68,7 +68,7 @@ Wants deep traces, dashboards, correlation IDs, and “why did the agent do that
 5. Goals & Non-Goals
    Goals (in scope for hackathon)
 
-End-to-end pipeline: Egg → Yolk → Albumen → Graph → Lyria audio + lyric artifact.
+End-to-end pipeline: Egg → Yolk → Albumen → Graph → MiniMax audio + lyric artifact.
 
 Human-in-the-loop review of extracted facts and transformations.
 
@@ -86,7 +86,7 @@ Enterprise-grade data governance platform (formal DLP, policy engines, retention
 
 Multi-tenant billing, complex org user management.
 
-Guaranteed lyric vocals synthesis inside the music model (Lyria RealTime is streaming music generation; vocals/lyrics are not guaranteed by the API docs).
+Guaranteed studio-grade vocal quality or perfect lyric alignment in generated audio (music generation output remains probabilistic).
 
 6. Core User Journeys (MVP)
    Journey A — “Demo mode” (primary hackathon flow)
@@ -103,7 +103,7 @@ Albumen runs Find/Replace (PII → fictional names, topic filters, tone rewrite)
 
 User explores the knowledge graph.
 
-User clicks Generate Song → sees lyrics + hears streaming instrumental audio.
+User clicks Generate Song → sees lyrics + hears generated audio.
 
 Journey B — “Bring your own text”
 
@@ -265,7 +265,7 @@ save/export artifact
 
 Acceptance
 
-Uses Gemini API Lyria RealTime streaming music generation (WebSocket-based) and produces playable output.
+Uses MiniMax Music Generation API (`/v1/music_generation`) and produces playable output (streamed or final response payload).
 
 8. Functional Requirements
    FR1 — Fictional hackathon chat generator (default input)
@@ -342,19 +342,19 @@ Must enable queries like:
 
 Neo4j Aura is a managed cloud offering suitable for hackathon deployment.
 
-FR7 — Music generation via Lyria RealTime
+FR7 — Music generation via MiniMax
 
-Use Gemini API music generation with Lyria RealTime, which:
+Use MiniMax `POST /v1/music_generation` (`model: music-2.5`), which supports:
 
-streams music in real-time
+prompt-based style steering with optional lyrics input
 
-supports steering via weighted prompts
+configurable duration and audio settings
 
-uses a persistent bidirectional WebSocket session
+streaming (`stream=true`) and non-streaming (`stream=false`) response modes
 
 Output artifacts:
 
-audio stream (playback)
+audio stream or final audio URL/hex payload (playback)
 
 saved audio file (S3)
 
@@ -415,7 +415,7 @@ Albumen Find per pass: < 20s for ~25 facts
 
 Graph upsert: < 5s
 
-Lyria start-to-audio: < 5s to first audio chunk (best-effort; depends on model/session)
+MiniMax audio readiness: < 20s for short generations (best-effort; depends on duration and stream mode)
 
 Security & data handling
 
@@ -464,7 +464,7 @@ Neo4j AuraDB: persisted knowledge graph.
 
 Music Generation
 
-Gemini API Lyria RealTime (WebSocket streaming).
+MiniMax Music Generation API (`/v1/music_generation`, `model: music-2.5`).
 
 Observability
 
@@ -523,9 +523,9 @@ GenerateLyrics
 
 Turn final facts into a structured lyric sheet + “chorus hook”.
 
-GenerateMusic (Lyria RealTime)
+GenerateMusic (MiniMax music_generation)
 
-Open session; stream audio chunks; store artifact to S3; emit progress to UI.
+Call `/v1/music_generation`; stream chunks or wait for final URL/hex output; store artifact to S3; emit progress to UI.
 
 FinalizeRun
 
@@ -634,9 +634,9 @@ graph.upsert
 
 lyrics.generate
 
-music.lyria_session
+music.minimax_generation
 
-music.audio_chunk_receive (aggregated counters)
+music.audio_output_receive (aggregated counters)
 
 Datadog LLM Observability supports traces representing predetermined workflows and dynamic agent workflows; traces contain spans for steps and can include input/output, latency, privacy issues, errors, and more.
 
@@ -670,7 +670,7 @@ matched PII-like tokens, replacements applied, override rate
 
 Music Reliability
 
-time to first audio chunk, session error rate
+time to first audio chunk (stream mode) or time to final URL (non-stream), generation error rate
 
 MCP-based debugging (Datadog MCP Server)
 
@@ -729,7 +729,7 @@ S3: artifact store (lyrics/audio)
 
 CloudFront + S3 (or Amplify): frontend hosting
 
-Secrets Manager: Gemini API key + Neo4j creds + Datadog keys
+Secrets Manager: MiniMax API key + Neo4j creds + Datadog keys
 
 17. Success Metrics (hackathon + product)
     Demo success (binary)
@@ -758,7 +758,7 @@ Albumen: find “names/emails” → replace with fictional roster → show diff
 
 Graph Explorer: click nodes and show relationships (decision ↔ person ↔ task)
 
-Song Studio: generate lyrics → start Lyria session → play streaming audio
+Song Studio: generate lyrics → call MiniMax music generation → play streamed or final audio
 
 Datadog: open the run trace, show stage spans, show slowest step, show any retries
 
@@ -766,11 +766,11 @@ Datadog: open the run trace, show stage spans, show slowest step, show any retri
 
 19. Risks & Mitigations
 
-Lyria RealTime instability / preview constraints
+MiniMax API limits / generation variance
 
-Risk: session failures, latency, changing APIs (experimental + preview).
+Risk: rate limits, variable generation latency, or expiring audio URLs in provider responses.
 
-Mitigation: fall back to “lyrics-only + placeholder backing track” (pre-bundled audio) if streaming fails.
+Mitigation: persist returned audio into S3 immediately and fall back to “lyrics-only + placeholder backing track” (pre-bundled audio) on generation failure/timeout.
 
 Datadog MCP access limitations
 
@@ -803,7 +803,7 @@ and does not expose raw JSON.
 
 Graph: Neo4j Aura contains the run graph and the UI queries it live.
 
-Music: Lyria RealTime session produces playable output (or fallback path triggers cleanly).
+Music: MiniMax music generation produces playable output (or fallback path triggers cleanly).
 
 Observability: Datadog shows:
 

@@ -1,0 +1,147 @@
+model = "gpt-5.3-codex"
+model_reasoning_effort = "xhigh"
+# sandbox = "danger-full-access"
+# ask_for_approval = "never"
+suppress_unstable_features_warning = true
+web_search = "live"
+personality = "pragmatic"
+
+
+[features]
+# rmcp_client = true
+unified_exec = true
+shell_snapshot = true
+# web_search_request = true
+collab = true
+steer = true
+
+[sandbox_workspace_write]
+network_access = true
+
+
+[projects."/home/kirill/projs/logwindow"]
+trust_level = "trusted"
+
+[projects."/home/kirill/projs/lyrebird-awsloft-hack260220"]
+trust_level = "trusted"
+
+
+# [mcp_servers.playwright]
+# command = "npx"
+# args = ["@playwright/mcp@latest"]
+# startup_timeout_sec = 155.0
+
+[mcp_servers.playwright]
+command = "npx"
+args = ["@playwright/mcp@latest", "--extension"]
+# args = ["@playwright/mcp@latest", "--extension", "--isolated", "--no-sandbox"]
+startup_timeout_sec = 155.0
+
+[mcp_servers.playwright.env]
+# PLAYWRIGHT_MCP_EXTENSION_TOKEN = "Yt_XkhGsu5gmxZFzFM55Lls8G_LYdNaEN5XPU9Aqhpk"
+PLAYWRIGHT_MCP_EXTENSION_TOKEN = "KY0fy8Dkhfz-widg_brHs9m_i3seEOEtx33a_siYHvg"
+# PLAYWRIGHT_MCP_EXTENSION_TOKEN = "lWYi-OJYQvKCFouKbIO2b0f95Ur9NhZmTaHYNqxurQ0"
+
+# [mcp_servers.browsermcp]
+# command = "npx"
+# args = ["@browsermcp/mcp@latest"]
+# startup_timeout_sec = 155.0
+
+# [mcp_servers.browsermcp.env]
+# SOME_ENV_VAR = "value"
+
+
+[mcp_servers.github]
+url = "https://api.githubcopilot.com/mcp/"
+bearer_token_env_var = "GITHUB_PAT"
+startup_timeout_sec = 155.0
+#
+# [mcp_servers.gcloud]
+# command = "npx"
+# args = ["-y", "@google-cloud/gcloud-mcp"]
+# startup_timeout_sec = 155.0
+
+# [mcp_servers.chrome-devtools]
+# command = "npx"
+# args = ["chrome-devtools-mcp@latest"]
+# startup_timeout_sec = 155.0
+
+# [mcp_servers.cloudflare-auditlogs]
+# command = "npx"
+# args = ["mcp-remote", "https://auditlogs.mcp.cloudflare.com/mcp"]
+# startup_timeout_sec = 155.0
+#
+# [mcp_servers.cloudflare-logpush]
+# command = "npx"
+# args = ["mcp-remote", "https://logs.mcp.cloudflare.com/mcp"]
+# startup_timeout_sec = 155.0
+#
+# [mcp_servers.cloudflare-workers-builds]
+# command = "npx"
+# args = ["mcp-remote", "https://builds.mcp.cloudflare.com/mcp"]
+# startup_timeout_sec = 155.0
+#
+# [mcp_servers.cloudflare-workers-observability]
+# command = "npx"
+# args = ["mcp-remote", "https://observability.mcp.cloudflare.com/mcp"]
+# startup_timeout_sec = 155.0
+#
+# [mcp_servers.cloudflare_bindings]
+# command = "npx"
+# args = ["mcp-remote", "https://bindings.mcp.cloudflare.com/mcp"]
+# startup_timeout_sec = 155.0
+#
+# [mcp_servers.cloudflare_docs]
+# command = "npx"
+# args = ["mcp-remote", "https://docs.mcp.cloudflare.com/mcp"]
+# startup_timeout_sec = 155.0
+
+[mcp_servers.context7]
+command = "npx"
+args = [
+  "-y",
+  "@upstash/context7-mcp",
+  "--api-key",
+  "ctx7sk-97194507-0230-4151-9a87-badcc829cd7f",
+]
+startup_timeout_sec = 155.0
+
+# [mcp_servers.paper-search-mcp]
+# url = "https://server.smithery.ai/@openags/paper-search-mcp/mcp"
+
+# [mcp_servers.google_search_console]
+# command = "/home/kirill/prls.co/mcp-gsc/.venv/bin/python"
+# args = ["/home/kirill/prls.co/mcp-gsc/gsc_server.py"]
+# startup_timeout_sec = 155.0
+#
+# [mcp_servers.google_search_console.env]
+# GOOGLE_APPLICATION_CREDENTIALS = "/home/kirill/.config/gcloud/application_default_credentials.json"
+# GSC_SKIP_OAUTH = "true"
+#
+#
+# [mcp_servers.analytics-mcp]
+# command = "/home/kirill/prls.co/google-analytics-mcp/.venv/bin/analytics-mcp"
+# args = []
+# startup_timeout_sec = 155.0
+#
+# [mcp_servers.analytics-mcp.env]
+# GOOGLE_APPLICATION_CREDENTIALS = "/home/kirill/.config/gcloud/application_default_credentials.json"
+# GOOGLE_PROJECT_ID = "prls-co-seo-2026"
+
+# [mcp_servers.beads]
+# command = "/home/kirill/.local/bin/beads-mcp"
+# startup_timeout_sec = 155.0
+
+# [mcp_servers.wandb]
+# url = "https://mcp.withwandb.com/mcp"
+# bearer_token_env_var = "WANDB_API_KEY"
+# startup_timeout_sec = 155.0
+
+
+[notice]
+hide_full_access_warning = true
+hide_gpt5_1_migration_prompt = true
+"hide-gpt-5.1-codex-max_migration_prompt" = true
+
+[notice.model_migrations]
+"gpt-5.2" = "gpt-5.2-codex"
