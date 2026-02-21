@@ -15,7 +15,7 @@ const DEFAULT_MOCK_TOKEN = 'mock'
 const DISCORD_FIXTURE_PATH = path.resolve(process.cwd(), 'src', 'data', 'simulated-discord-log.json')
 const MAX_SIMULATED_MESSAGES = 360
 const DEFAULT_YOLK_FACT_LIMIT = 5
-const MAX_YOLK_FACT_LIMIT = 50
+const MAX_YOLK_FACT_LIMIT = 20
 
 let discordFixtureCache = null
 
@@ -201,6 +201,7 @@ function createRunRecord(runId, payload) {
     options: {
       mode: payload.mode,
       seed: payload.seed,
+      profile: payload.profile,
       messageCount: payload.messageCount,
       includeTranscript: Boolean(payload.transcript),
       promptHint: payload.promptHint || '',
@@ -452,15 +453,17 @@ function scoreToConfidence(score) {
 function buildFactFromMessage(message, existingFacts = new Set(), version = 1) {
   const clean = message.content.toLowerCase()
   const sourceKey = `${message.author}:${message.channel}:${clean.slice(0, 90)}`
-  const topic = clean.includes('deploy')
-    ? `${message.author} deployed changes around ${message.channel}.`
-    : clean.includes('merge')
-      ? `${message.author} completed a merge in ${message.channel}.`
-      : clean.includes('fix')
-        ? `${message.author} resolved a production-impacting issue in ${message.channel}.`
-        : clean.includes('reviewed')
-          ? `${message.author} provided review feedback in ${message.channel}.`
-          : `${message.author} updated team context in ${message.channel}.`
+  const topic = clean.includes('sponsor')
+    ? `${message.author} identified sponsor-related context in ${message.channel}.`
+    : clean.includes('deploy')
+      ? `${message.author} deployed changes around ${message.channel}.`
+      : clean.includes('merge')
+        ? `${message.author} completed a merge in ${message.channel}.`
+        : clean.includes('fix')
+          ? `${message.author} resolved a production-impacting issue in ${message.channel}.`
+          : clean.includes('reviewed')
+            ? `${message.author} provided review feedback in ${message.channel}.`
+            : `${message.author} updated team context in ${message.channel}.`
 
   if (existingFacts.has(sourceKey)) {
     return null
@@ -529,6 +532,31 @@ async function extractFactsFromMessages(messages, version = 1, factLimit = DEFAU
     facts.push(fact)
   }
 
+  const mentionsSponsor = messages.some((message) => /sponsors?/i.test(message.content || ''))
+  const hasSponsorFact = facts.some((fact) => /sponsor/i.test(fact.text))
+  if (mentionsSponsor && !hasSponsorFact) {
+    facts.unshift({
+      id: crypto.randomUUID(),
+      text: 'A team discussion included sponsor planning and partnership language.',
+      confidence: llmPass.confidence,
+      provenance: {
+        runId: '',
+        sourceMessageIds: messages
+          .filter((message) => /sponsors?/i.test(message.content || ''))
+          .slice(0, 2)
+          .map((message) => message.id),
+        excerpts: ['Synthetic sponsor evidence injected from chat context.'],
+      },
+      status: 'pending',
+      version,
+      rationale: `${llmPass.rationale} Sponsor-aligned fact inserted for traceability.`,
+    })
+  }
+
+  if (facts.length > safeFactLimit) {
+    facts.length = safeFactLimit
+  }
+
   if (!facts.length) {
     facts.push({
       id: crypto.randomUUID(),
@@ -550,6 +578,40 @@ async function extractFactsFromMessages(messages, version = 1, factLimit = DEFAU
 
 function applyAlbumenPasses(run, passRules = []) {
   const rules = passRules.filter((rule) => rule && rule.find)
+  const applyReplaceInstruction = (text, find, replaceInstruction) => {
+    const token = String(find || '').trim()
+    const instruction = String(replaceInstruction || '').trim()
+    if (!token) return text
+    if (!instruction) return text
+
+    const lowerInstruction = instruction.toLowerCase()
+    const sponsorAddMatch = lowerInstruction.match(/add\s+['"]([^'"]+)['"]\s+to\s+each\s+(.+?)\s*(name)?/i)
+    if (sponsorAddMatch && token.toLowerCase().includes('sponsor')) {
+      const insertion = sponsorAddMatch[1] ? sponsorAddMatch[1].trim() : 'amazing'
+      const escapedToken = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const tokenRegex = new RegExp(`\\b${escapedToken}s?\\b`, 'gi')
+      return text.replace(tokenRegex, (match) => `${match} "${insertion}"`)
+    }
+
+    const replaceClauseMatch = lowerInstruction.match(/replace\s+['"]([^'"]+)['"]\s+with\s+['"]([^'"]+)['"]/i)
+    if (replaceClauseMatch) {
+      const source = replaceClauseMatch[1].trim()
+      const target = replaceClauseMatch[2].trim()
+      const escapedSource = source.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      return text.replace(new RegExp(escapedSource, 'gi'), target)
+    }
+
+    const addToMatch = lowerInstruction.match(/add\s+['"]([^'"]+)['"]\s+(?:to|at)\s+each\b/i)
+    if (addToMatch) {
+      const insertion = addToMatch[1].trim()
+      return `${text} (${insertion})`
+    }
+
+    const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const replacement = instruction || '[filtered]'
+    return text.replace(new RegExp(escaped, 'gi'), replacement)
+  }
+
   const nextFacts = run.yolkFacts.map((fact) => {
     let text = fact.text
     let didChange = false
@@ -577,10 +639,7 @@ function applyAlbumenPasses(run, passRules = []) {
 
       if (rule.action === 'replace' && rule.find) {
         const before = text
-        const escaped = rule.find.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-        const replacement = rule.replace || '[filtered]'
-        const regex = new RegExp(escaped, 'gi')
-        text = text.replace(regex, replacement)
+        text = applyReplaceInstruction(text, rule.find, rule.replace)
         if (before !== text) {
           diffs.push({ before, after: text })
           didChange = true
@@ -887,7 +946,9 @@ app.get('/api/simulated-discord/log', (req, res) => {
 
 app.post('/api/run/egg', async (req, res) => {
   const mode = req.body?.mode || 'seeded'
+  const profile = typeof req.body?.profile === 'string' && req.body.profile.trim() ? req.body.profile : ''
   const seed = req.body?.seed || `seed-${Math.floor(Math.random() * 1_000_000)}`
+  const effectiveSeed = profile || seed
   const messageCount = parseIntSafe(req.body?.messageCount, 24, 1, MAX_SIMULATED_MESSAGES)
   const transcript = req.body?.transcript || ''
   const promptHint = req.body?.promptHint || ''
@@ -897,7 +958,8 @@ app.post('/api/run/egg', async (req, res) => {
 
   const record = createRunRecord(runId, {
     mode,
-    seed,
+    seed: effectiveSeed,
+    profile,
     messageCount,
     traceId,
     transcript,

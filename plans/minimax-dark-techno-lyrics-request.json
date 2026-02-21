@@ -1,0 +1,12 @@
+{
+  "model": "music-2.5",
+  "prompt": "Dark techno score that translates a real-world hackathon operations log into forward-moving, cinematic rhythm. Keep it precise, futuristic, and intense.",
+  "lyrics": "[Intro]\nNeon lights, a live hackathon hum, all teams in sync.\n[Verse]\nThe event organizers posted a full prize breakdown for AWS (amazing), Datadog, Neo4j, MiniMax, and TestSprite tracks during the day.\nCopilotKit (amazing) announced an updated prize to a pair of Meta Ray-Ban glasses for each member of the top two teams.\nSome participants had private marketplace and IAM permission failures when attempting Bedrock access during setup.\nTeam members requested a direct AWS support contact for Bedrock/IAM issues and asked if a designated technical support channel existed.\n[Chorus]\nParticipants reported that Bedrock inference calls were possible, but deploying services like EC2 was not working under their account permissions.\nLenka confirmed that participants should submit GitHub link, demo video, track selections, and product answers in the event submission form.\n[Bridge]\nRaw fact stream: prize breakdown, support blockers, deployment friction, and submission expectations drive the flow.\n[Outro]\nFinal evidence is timestamped, reviewed, and transformed into music.\n",
+  "stream": false,
+  "output_format": "url",
+  "audio_setting": {
+    "sample_rate": 44100,
+    "bitrate": 256000,
+    "format": "mp3"
+  }
+}

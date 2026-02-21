@@ -86,6 +86,21 @@ function FactPanel({
   isBusy: boolean
   defaultLimit: number
 }) {
+  const [expandedFacts, setExpandedFacts] = useState<Set<string>>(new Set())
+  const rationalePreviewLength = 150
+
+  function toggleRationale(factId: string) {
+    setExpandedFacts((current) => {
+      const next = new Set(current)
+      if (next.has(factId)) {
+        next.delete(factId)
+      } else {
+        next.add(factId)
+      }
+      return next
+    })
+  }
+
   return (
     <CopilotFrame>
       <div className="section-head">
@@ -96,28 +111,54 @@ function FactPanel({
       </div>
       <p className="muted">Fact count target: {facts.length}/{defaultLimit}</p>
       <div className="fact-list">
-        {facts.map((fact) => (
+        {facts.map((fact) => {
+          const rationale = fact.rationale || 'Derived from source messages.'
+          const isExpanded = expandedFacts.has(fact.id)
+          const shouldTruncate = rationale.length > rationalePreviewLength
+          const previewRationale = `${rationale.slice(0, rationalePreviewLength).trimEnd()}...`
+
+          return (
           <article className="fact" key={fact.id}>
             <div className="fact__head">
+              <button
+                className="fact__remove"
+                aria-label="Remove fact"
+                onClick={() => onToggle(fact.id, 'removed')}
+                type="button"
+              >
+                ✕
+              </button>
               <strong>Fact #{fact.version}</strong>
               <span>confidence {formatPercent(fact.confidence)}</span>
               <span>status {fact.status}</span>
+              <p className="fact__why">
+                <span className="fact__why-title">Why:</span>
+                <span
+                  className="fact__why-text"
+                  data-expanded={isExpanded ? '1' : '0'}
+                >
+                  {isExpanded || !shouldTruncate ? rationale : previewRationale}
+                </span>
+                {shouldTruncate && (
+                  <button
+                    className="fact__ellipsis"
+                    onClick={() => toggleRationale(fact.id)}
+                    aria-label={isExpanded ? 'Collapse explanation' : 'Expand explanation'}
+                    type="button"
+                  >
+                    {isExpanded ? '▲' : '...'}
+                  </button>
+                )}
+              </p>
             </div>
             <textarea
               className="fact__text"
               value={fact.text}
               onChange={(event) => onEdit(fact.id, event.target.value)}
             />
-            <p className="muted fact__why">Why: {fact.rationale || 'Derived from source messages.'}</p>
-            <div className="chip-row">
-              <button onClick={() => onToggle(fact.id, fact.status === 'approved' ? 'pending' : 'approved')}>
-                {fact.status === 'approved' ? 'Unapprove' : 'Approve'}
-              </button>
-              <button onClick={() => onToggle(fact.id, 'removed')}>Remove</button>
-              <button onClick={() => onToggle(fact.id, fact.status === 'rewritten' ? 'pending' : 'rewritten')}>Rewrite Tag</button>
-            </div>
           </article>
-        ))}
+          )
+        })}
         {!facts.length && <p className="muted">{`Run Yolk to extract up to ${defaultLimit} facts from the transcript.`}</p>}
       </div>
     </CopilotFrame>
@@ -313,8 +354,10 @@ function LLMInsightsPanel({ notes }: { notes: LLMCallSummary[] }) {
 
 export function App() {
   const [mode, setMode] = useState<'seeded' | 'paste'>('seeded')
-  const [seed, setSeed] = useState('judge-demo-01')
-  const [messageCount, setMessageCount] = useState(260)
+  const [profile, setProfile] = useState(
+    'Avery Chen, CEO of Driftline — focused on product quality, cross-team clarity, and investor confidence. Quick checks, clean ops, bold launches.',
+  )
+  const messageCount = 260
   const [transcript, setTranscript] = useState('Kai: pushed new instrumentation and fixed edge case.\nLex: we should add replay guardrails.')
   const [runId, setRunId] = useState('')
   const [runState, setRunState] = useState<RunState | null>(null)
@@ -327,14 +370,22 @@ export function App() {
   const [songArtifact, setSongArtifact] = useState<SongArtifact | null>(null)
   const [telemetry, setTelemetry] = useState<TelemetryEvent[]>([])
   const [llmNotes, setLlmNotes] = useState<LLMCallSummary[]>([])
-  const [ruleFind, setRuleFind] = useState('emails')
-  const [ruleReplace, setRuleReplace] = useState('[REDACTED]')
-  const [ruleAction, setRuleAction] = useState<'replace' | 'pii_remove' | 'rewrite_tone'>('replace')
-  const [yolkFactLimit, setYolkFactLimit] = useState(5)
+  const [ruleFind, setRuleFind] = useState('')
+  const [ruleReplace, setRuleReplace] = useState('')
+  const [factFilter, setFactFilter] = useState('')
+  const yolkFactLimit = 5
   const [isBusy, setIsBusy] = useState(false)
   const [message, setMessage] = useState('')
 
-  const canSeed = Boolean(seed)
+  const canRunYolk = Boolean(profile.trim())
+  const profileSeed = useMemo(() => `profile-${seedFromText(profile, 12)}`, [profile])
+  const visibleFacts = useMemo(() => {
+    const normalized = factFilter.trim().toLowerCase()
+
+    if (!normalized) return facts
+
+    return facts.filter((fact) => fact.text.toLowerCase().includes(normalized))
+  }, [facts, factFilter])
 
   function addLLMNote(note?: LLMCallSummary | null) {
     if (!note) return
@@ -353,11 +404,11 @@ export function App() {
   }
 
   async function handleSeedPreview() {
-    if (!canSeed) {
+    if (!canRunYolk) {
       return
     }
     try {
-      const payload = await fetchSimulatedLog(seed, messageCount)
+      const payload = await fetchSimulatedLog(profileSeed, messageCount)
       setPreviewMessages(payload.messages)
     } catch (error) {
       setMessage(`Seed preview failed: ${error instanceof Error ? error.message : String(error)}`)
@@ -367,11 +418,13 @@ export function App() {
   async function extractFacts() {
     setIsBusy(true)
     setMessage('')
+    setFactFilter('')
 
     try {
       const egg = await startEggRun({
         mode,
-        seed,
+        seed: profileSeed,
+        profile,
         messageCount,
         transcript: mode === 'paste' ? transcript : '',
         promptHint: 'generate factual song track from mock Discord run',
@@ -408,12 +461,21 @@ export function App() {
     setIsBusy(true)
 
     try {
+      if (!ruleFind.trim()) {
+        setMessage('Set a find term before applying Albumen.')
+        return
+      }
+      if (!ruleReplace.trim()) {
+        setMessage('Set a replace instruction before applying Albumen.')
+        return
+      }
+
       const rules: AlbumenPassDraft[] = [
         {
           id: crypto.randomUUID(),
           find: ruleFind,
           replace: ruleReplace,
-          action: ruleAction,
+          action: 'replace',
           version: 1,
           createdAt: Date.now(),
           touchedCount: 0,
@@ -424,7 +486,11 @@ export function App() {
       setFacts(result.facts)
       setPasses(result.passes)
       addLLMNote(result.llm)
-      setMessage('Albumen pass applied. Graph and facts now include transform history.')
+      if (factFilter) {
+        setMessage(`Albumen pass applied to ${result.passes?.at(-1)?.touchedCount || 0} fact(s). Filter retained: "${factFilter}".`)
+      } else {
+        setMessage('Albumen pass applied. Graph and facts now include transform history.')
+      }
       await refreshDebug(runId)
     } catch (error) {
       setMessage(`Albumen failed: ${error instanceof Error ? error.message : String(error)}`)
@@ -494,7 +560,7 @@ export function App() {
     const file = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
     const link = document.createElement('a')
     link.href = URL.createObjectURL(file)
-    link.download = `lyrebird-run-${runId.slice(0, 10)}-${seedFromText(seed)}.json`
+    link.download = `lyrebird-run-${runId.slice(0, 10)}-${seedFromText(profile)}.json`
     link.click()
     URL.revokeObjectURL(link.href)
     setMessage('Run bundle exported.')
@@ -508,9 +574,48 @@ export function App() {
     setFacts((current) => current.map((fact) => (fact.id === id ? { ...fact, status } : fact)))
   }
 
+  function runFind() {
+    const query = ruleFind.trim().toLowerCase()
+
+    if (query) {
+      setFactFilter(query)
+      const matched = facts.filter((fact) => fact.text.toLowerCase().includes(query)).length
+      setMessage(`Find matched ${matched} fact(s) containing "${query}".`)
+      return
+    }
+
+    setMessage('Set a find term first.')
+  }
+
+  async function runReplace() {
+    const query = ruleFind.trim().toLowerCase()
+
+    if (!runId) {
+      setMessage('Run Yolk first before replacing facts.')
+      return
+    }
+    if (!query) {
+      setMessage('Set a find term before Replace.')
+      return
+    }
+    const matchingFacts = facts.filter((fact) => fact.text.toLowerCase().includes(query)).length
+    if (!matchingFacts) {
+      setMessage(`No facts found for "${query}" to edit.`)
+      return
+    }
+    if (!ruleReplace.trim()) {
+      setMessage('Set a replace instruction before Replace.')
+      return
+    }
+
+    setFactFilter(query)
+    await applyAlbumen()
+    setMessage(`Replace completed for ${matchingFacts} fact(s): ${query} -> ${ruleReplace.trim()}.`)
+  }
+
   useEffect(() => {
     handleSeedPreview()
-  }, [seed, messageCount])
+  }, [profileSeed, messageCount])
 
   return (
     <div className="app-shell">
@@ -537,31 +642,11 @@ export function App() {
               </select>
             </label>
             <label className="control-row">
-              <span>🏷️ Seed</span>
-              <input value={seed} onChange={(event) => setSeed(event.target.value)} />
-            </label>
-            <label className="control-row">
-              <span>🔁 Message Count</span>
-              <input
-                type="range"
-                min={8}
-                max={360}
-                value={messageCount}
-                onChange={(event) => setMessageCount(Number(event.target.value))}
-              />
-              <strong>{messageCount}</strong>
-            </label>
-            <label className="control-row">
-              <span>🔢 Yolk Fact Count</span>
-              <input
-                type="number"
-                min={1}
-                max={50}
-                value={yolkFactLimit}
-                onChange={(event) => {
-                  const nextValue = Number.parseInt(event.target.value, 10)
-                  setYolkFactLimit(Math.max(1, Math.min(50, Number.isNaN(nextValue) ? 5 : nextValue)))
-                }}
+              <span>👤 Profile</span>
+              <textarea
+                value={profile}
+                onChange={(event) => setProfile(event.target.value)}
+                placeholder="A CEO, engineer, or analyst persona can be used as context for fact extraction."
               />
             </label>
             {mode === 'paste' && (
@@ -573,18 +658,18 @@ export function App() {
           </CopilotFrame>
 
           <FactPanel
-            facts={facts}
+            facts={visibleFacts}
             onToggle={handleFactStatus}
             onEdit={handleFactEdit}
             onRun={extractFacts}
-            canRun={canSeed}
+            canRun={canRunYolk}
             isBusy={isBusy}
             defaultLimit={yolkFactLimit}
           />
 
           <CopilotFrame>
             <div className="section-head">
-              <h2>🧪 Albumen Rule Builder</h2>
+              <h2>🧪 Find/Replace</h2>
               <button
                 onClick={applyAlbumen}
                 disabled={isBusy || !runId}
@@ -594,26 +679,41 @@ export function App() {
               </button>
             </div>
             <label className="control-row">
-              <span>⚙️ Action</span>
-              <select value={ruleAction} onChange={(event) => setRuleAction(event.target.value as 'replace' | 'pii_remove' | 'rewrite_tone')}>
-                <option value="replace">find-replace</option>
-                <option value="pii_remove">PII remove</option>
-                <option value="rewrite_tone">Rewrite tone</option>
-              </select>
+              <div className="control-label-row">
+                <span>🔎 Find</span>
+                <button type="button" onClick={() => setRuleFind('sponsors')} className="placeholder-button" aria-label="Seed find with sponsors">
+                  🔍
+                </button>
+              </div>
+              <div className="inline-control">
+                <input
+                  value={ruleFind}
+                  onChange={(event) => setRuleFind(event.target.value)}
+                  placeholder="find term"
+                />
+                <button type="button" onClick={runFind} disabled={isBusy || !runId}>
+                  🔎 Find
+                </button>
+              </div>
             </label>
             <label className="control-row">
-              <span>🕵️ Find</span>
-              <input value={ruleFind} onChange={(event) => setRuleFind(event.target.value)} />
+              <div className="control-label-row">
+                <span>Replace</span>
+                <button type="button" onClick={() => setRuleReplace("add 'amazing' to each sponsor name")} className="placeholder-button" aria-label="Seed replace with amazing sponsor suffix">
+                  ✍️
+                </button>
+              </div>
+              <div className="inline-control">
+                <input
+                  value={ruleReplace}
+                  onChange={(event) => setRuleReplace(event.target.value)}
+                  placeholder="replace instruction"
+                />
+                <button type="button" onClick={runReplace} disabled={isBusy || !runId}>
+                  ✍️ Replace
+                </button>
+              </div>
             </label>
-            <label className="control-row">
-              <span>🔁 Replace</span>
-              <input value={ruleReplace} onChange={(event) => setRuleReplace(event.target.value)} />
-            </label>
-            <div className="button-row">
-              <button onClick={exportBundle} disabled={!runId} aria-label="Export Run Bundle">
-                Export Run Bundle 📦
-              </button>
-            </div>
           </CopilotFrame>
 
           {message && <p className="status-banner">{message}</p>}

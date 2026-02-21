@@ -44,6 +44,7 @@ export async function fetchSimulatedLog(seed: string, messageCount: number) {
 export async function startEggRun(payload: {
   mode: 'seeded' | 'paste'
   seed: string
+  profile?: string
   messageCount: number
   transcript?: string
   promptHint?: string

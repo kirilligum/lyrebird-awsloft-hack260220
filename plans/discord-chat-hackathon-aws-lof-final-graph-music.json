@@ -1,0 +1,269 @@
+{
+  "id": "discord-chat-hackathon-aws-lof-final-v1",
+  "runId": "discord-chat-hackathon-aws-lof",
+  "stage": "music",
+  "source": "plans/discord-chat-hackathon-aws-lof-facts.json",
+  "createdAt": "2026-02-21T00:00:00.000Z",
+  "purpose": "Final artifact for knowledge graph rendering and music generation: 5 raw facts plus 2 sponsor-updated facts.",
+  "rawFacts": [
+    {
+      "id": "fact-001",
+      "text": "The event organizers posted a full prize breakdown for AWS, Datadog, Neo4j, MiniMax, and TestSprite tracks during the day.",
+      "confidence": 0.99,
+      "provenance": {
+        "runId": "discord-chat-hackathon-aws-lof",
+        "sourceMessageIds": ["msg-002"],
+        "excerpts": ["Reminder for ALL prizes today", "AWS ... Datadog ... Neo4j ... MiniMax ... TestSprite"],
+        "passVersion": 1
+      },
+      "status": "pending",
+      "version": 1,
+      "rationale": "Organizer posted consolidated prize and track breakdown in one message."
+    },
+    {
+      "id": "fact-002",
+      "text": "Some participants had private marketplace and IAM permission failures when attempting Bedrock access during setup.",
+      "confidence": 0.98,
+      "provenance": {
+        "runId": "discord-chat-hackathon-aws-lof",
+        "sourceMessageIds": ["msg-004", "msg-008", "msg-011"],
+        "excerpts": ["Model access is denied", "is not authorized to perform: bedrock:CreateAgent", "IAM WSParticipantRole says us-west-2 us-east-1 cannot be used"],
+        "passVersion": 1
+      },
+      "status": "pending",
+      "version": 1,
+      "rationale": "Multiple messages reported the same permission failures across the participant cohort."
+    },
+    {
+      "id": "fact-003",
+      "text": "Team members requested a direct AWS support contact for Bedrock/IAM issues and asked if a designated technical support channel existed.",
+      "confidence": 0.95,
+      "provenance": {
+        "runId": "discord-chat-hackathon-aws-lof",
+        "sourceMessageIds": ["msg-012", "msg-013", "msg-014"],
+        "excerpts": ["designated AWS point of contact or tech support channel", "Same question."],
+        "passVersion": 1
+      },
+      "status": "pending",
+      "version": 1,
+      "rationale": "Three separate messages explicitly asked for AWS support channel or ownership clarification."
+    },
+    {
+      "id": "fact-004",
+      "text": "Participants reported that Bedrock inference calls were possible, but deploying services like EC2 was not working under their account permissions.",
+      "confidence": 0.95,
+      "provenance": {
+        "runId": "discord-chat-hackathon-aws-lof",
+        "sourceMessageIds": ["msg-022", "msg-023", "msg-024", "msg-015", "msg-017", "msg-019"],
+        "excerpts": ["I tested, I can use bedrock with no issue", "it doesn't let me to spin up ec2", "No ECR, ECS , EC2 etc permissions", "actually no", "u can deploy ecs"],
+        "passVersion": 1
+      },
+      "status": "pending",
+      "version": 1,
+      "rationale": "Multiple participants described a divergence between inference success and infrastructure provisioning failures."
+    },
+    {
+      "id": "fact-007",
+      "text": "Lenka confirmed that participants should submit GitHub link, demo video, track selections, and product answers in the event submission form.",
+      "confidence": 0.98,
+      "provenance": {
+        "runId": "discord-chat-hackathon-aws-lof",
+        "sourceMessageIds": ["msg-041", "msg-042", "msg-043", "msg-045"],
+        "excerpts": ["Please review the submission form", "submit your Github link, a demo video, pick your tracks, and answer the questions", "https://forms.gle/JLpoa8eZPtniyg6BA"],
+        "passVersion": 1
+      },
+      "status": "pending",
+      "version": 1,
+      "rationale": "Organizer response directly defined submission artifacts and fields."
+    }
+  ],
+  "updatedFacts": [
+    {
+      "id": "fact-001",
+      "text": "The event organizers posted a full prize breakdown for AWS (amazing), Datadog, Neo4j, MiniMax, and TestSprite tracks during the day.",
+      "confidence": 0.99,
+      "provenance": {
+        "runId": "discord-chat-hackathon-aws-lof",
+        "sourceMessageIds": ["msg-002"],
+        "excerpts": ["Reminder for ALL prizes today", "AWS ... Datadog ... Neo4j ... MiniMax ... TestSprite"],
+        "passVersion": 2
+      },
+      "status": "pending",
+      "version": 2,
+      "rationale": "Albumen pass mutation for sponsor-name enhancement: 'add \"amazing\" to each sponsor name'.",
+      "appliedDiffs": [
+        {
+          "before": "The event organizers posted a full prize breakdown for AWS, Datadog, Neo4j, MiniMax, and TestSprite tracks during the day.",
+          "after": "The event organizers posted a full prize breakdown for AWS (amazing), Datadog, Neo4j, MiniMax, and TestSprite tracks during the day."
+        }
+      ]
+    },
+    {
+      "id": "fact-006",
+      "text": "CopilotKit (amazing) announced an updated prize to a pair of Meta Ray-Ban glasses for each member of the top two teams.",
+      "confidence": 0.99,
+      "provenance": {
+        "runId": "discord-chat-hackathon-aws-lof",
+        "sourceMessageIds": ["msg-007"],
+        "excerpts": ["CopilotKit has updated their prizes to: Top two teams will each receive a pair of Meta Ray Bans"],
+        "passVersion": 2
+      },
+      "status": "pending",
+      "version": 2,
+      "rationale": "Albumen pass mutation for sponsor-name enhancement: 'add \"amazing\" to each sponsor name'.",
+      "appliedDiffs": [
+        {
+          "before": "CopilotKit announced an updated prize to a pair of Meta Ray-Ban glasses for each member of the top two teams.",
+          "after": "CopilotKit (amazing) announced an updated prize to a pair of Meta Ray-Ban glasses for each member of the top two teams."
+        }
+      ]
+    }
+  ],
+  "musicInputFacts": {
+    "source": "graph-selected",
+    "factIds": [
+      "fact-001#v2",
+      "fact-006#v2",
+      "fact-002#v1",
+      "fact-003#v1",
+      "fact-004#v1",
+      "fact-007#v1"
+    ],
+    "orderedTexts": [
+      "The event organizers posted a full prize breakdown for AWS (amazing), Datadog, Neo4j, MiniMax, and TestSprite tracks during the day.",
+      "CopilotKit (amazing) announced an updated prize to a pair of Meta Ray-Ban glasses for each member of the top two teams.",
+      "Some participants had private marketplace and IAM permission failures when attempting Bedrock access during setup.",
+      "Team members requested a direct AWS support contact for Bedrock/IAM issues and asked if a designated technical support channel existed.",
+      "Participants reported that Bedrock inference calls were possible, but deploying services like EC2 was not working under their account permissions.",
+      "Lenka confirmed that participants should submit GitHub link, demo video, track selections, and product answers in the event submission form."
+    ],
+    "musicHint": "Use these 6 facts for lyric context with preserved provenance." 
+  },
+  "graphPayload": {
+    "nodes": [
+      {
+        "id": "run:discord-chat-hackathon-aws-lof",
+        "label": "Run: Hackathon Transcript",
+        "type": "run"
+      },
+      {
+        "id": "fact:fact-001#v1",
+        "label": "Raw Fact 1",
+        "type": "fact",
+        "version": 1,
+        "confidence": 0.99
+      },
+      {
+        "id": "fact:fact-001#v2",
+        "label": "Updated Fact 1",
+        "type": "fact",
+        "version": 2,
+        "confidence": 0.99
+      },
+      {
+        "id": "fact:fact-002#v1",
+        "label": "Raw Fact 2",
+        "type": "fact",
+        "version": 1,
+        "confidence": 0.98
+      },
+      {
+        "id": "fact:fact-003#v1",
+        "label": "Raw Fact 3",
+        "type": "fact",
+        "version": 1,
+        "confidence": 0.95
+      },
+      {
+        "id": "fact:fact-004#v1",
+        "label": "Raw Fact 4",
+        "type": "fact",
+        "version": 1,
+        "confidence": 0.95
+      },
+      {
+        "id": "fact:fact-006#v1",
+        "label": "Raw Fact 6",
+        "type": "fact",
+        "version": 1,
+        "confidence": 0.99
+      },
+      {
+        "id": "fact:fact-006#v2",
+        "label": "Updated Fact 6",
+        "type": "fact",
+        "version": 2,
+        "confidence": 0.99
+      },
+      {
+        "id": "fact:fact-007#v1",
+        "label": "Raw Fact 7",
+        "type": "fact",
+        "version": 1,
+        "confidence": 0.98
+      },
+      {
+        "id": "pass:albumen-pass-1",
+        "label": "Albumen Pass 1",
+        "type": "pass"
+      }
+    ],
+    "edges": [
+      {
+        "from": "run:discord-chat-hackathon-aws-lof",
+        "to": "fact:fact-001#v1",
+        "relation": "raw_fact"
+      },
+      {
+        "from": "run:discord-chat-hackathon-aws-lof",
+        "to": "fact:fact-002#v1",
+        "relation": "raw_fact"
+      },
+      {
+        "from": "run:discord-chat-hackathon-aws-lof",
+        "to": "fact:fact-003#v1",
+        "relation": "raw_fact"
+      },
+      {
+        "from": "run:discord-chat-hackathon-aws-lof",
+        "to": "fact:fact-004#v1",
+        "relation": "raw_fact"
+      },
+      {
+        "from": "run:discord-chat-hackathon-aws-lof",
+        "to": "fact:fact-006#v2",
+        "relation": "updated_fact"
+      },
+      {
+        "from": "run:discord-chat-hackathon-aws-lof",
+        "to": "fact:fact-007#v1",
+        "relation": "raw_fact"
+      },
+      {
+        "from": "pass:albumen-pass-1",
+        "to": "fact:fact-001#v2",
+        "relation": "mutated_from"
+      },
+      {
+        "from": "pass:albumen-pass-1",
+        "to": "fact:fact-006#v1",
+        "relation": "applied_to"
+      },
+      {
+        "from": "pass:albumen-pass-1",
+        "to": "fact:fact-006#v2",
+        "relation": "mutated_from"
+      },
+      {
+        "from": "fact:fact-001#v1",
+        "to": "fact:fact-001#v2",
+        "relation": "versioned_to"
+      },
+      {
+        "from": "fact:fact-006#v2",
+        "to": "fact:fact-006#v1",
+        "relation": "updated_from"
+      }
+    ]
+  }
+}

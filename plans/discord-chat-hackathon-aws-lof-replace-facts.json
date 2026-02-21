@@ -1,0 +1,23 @@
+{
+  "id": "discord-chat-hackathon-aws-lof-replace-facts-v1",
+  "source": "plans/discord-chat-hackathon-aws-lof-facts.json",
+  "replaceInstructionPlaceholder": "add 'amazing' to each sponsor name",
+  "items": [
+    {
+      "replaceIndex": 1,
+      "findIndex": 1,
+      "factId": "fact-001",
+      "find": "AWS",
+      "replace": "AWS (amazing)",
+      "result": "The event organizers posted a full prize breakdown for AWS (amazing), Datadog, Neo4j, MiniMax, and TestSprite tracks during the day."
+    },
+    {
+      "replaceIndex": 2,
+      "findIndex": 2,
+      "factId": "fact-006",
+      "find": "CopilotKit",
+      "replace": "CopilotKit (amazing)",
+      "result": "CopilotKit (amazing) announced an updated prize to a pair of Meta Ray-Ban glasses for each member of the top two teams."
+    }
+  ]
+}

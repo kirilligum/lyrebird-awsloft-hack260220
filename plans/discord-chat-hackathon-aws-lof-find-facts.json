@@ -1,0 +1,27 @@
+{
+  "id": "discord-chat-hackathon-aws-lof-find-facts-v1",
+  "source": "plans/discord-chat-hackathon-aws-lof-facts.json",
+  "purpose": "Two atomic facts from the transcript that contain sponsor names for targeted find/replace operations.",
+  "items": [
+    {
+      "findIndex": 1,
+      "factId": "fact-001",
+      "text": "The event organizers posted a full prize breakdown for AWS, Datadog, Neo4j, MiniMax, and TestSprite tracks during the day.",
+      "sponsors": ["AWS", "Datadog", "Neo4j", "MiniMax", "TestSprite"],
+      "sourceMessageIds": ["msg-002"],
+      "provenance": {
+        "runId": "discord-chat-hackathon-aws-lof"
+      }
+    },
+    {
+      "findIndex": 2,
+      "factId": "fact-006",
+      "text": "CopilotKit announced an updated prize to a pair of Meta Ray-Ban glasses for each member of the top two teams.",
+      "sponsors": ["CopilotKit"],
+      "sourceMessageIds": ["msg-007"],
+      "provenance": {
+        "runId": "discord-chat-hackathon-aws-lof"
+      }
+    }
+  ]
+}

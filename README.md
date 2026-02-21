@@ -25,9 +25,9 @@ flowchart TD
   P[👤 Profile]
 
   subgraph Egg["🥚 Egg"]
-    Y[🧬 Yolk extraction]
-    A[🍳 Albumen]
-    R{🔁 Need another pass?}
+    Y[🧬 Facts extraction]
+    A[🍳 Semantic batch find and replace]
+    R{🔁 again}
     F["✅ Final facts"]
   end
 

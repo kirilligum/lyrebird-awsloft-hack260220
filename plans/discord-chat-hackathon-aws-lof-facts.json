@@ -1,0 +1,107 @@
+{
+  "id": "discord-chat-hackathon-aws-lof-facts-v1",
+  "source": "plans/discord-chat-hackathon-aws-lof.json",
+  "title": "Top 7 facts from AWSxDatadog hackathon discord chat",
+  "runId": "discord-chat-hackathon-aws-lof",
+  "createdAt": "2026-02-21T00:00:00.000Z",
+  "facts": [
+    {
+      "id": "fact-001",
+      "text": "The event organizers posted a full prize breakdown for AWS, Datadog, Neo4j, MiniMax, and TestSprite tracks during the day.",
+      "confidence": 0.99,
+      "status": "pending",
+      "version": 1,
+      "rationale": "A single organizer message contains all track tiers and prizes with clearly formatted amounts for each category.",
+      "provenance": {
+        "runId": "discord-chat-hackathon-aws-lof",
+        "sourceMessageIds": ["msg-002"],
+        "excerpts": ["Reminder for ALL prizes today", "AWS ... Datadog ... Neo4j ... MiniMax ... TestSprite"],
+        "passVersion": 1
+      }
+    },
+    {
+      "id": "fact-002",
+      "text": "Some participants had private marketplace and IAM permission failures when attempting Bedrock access during setup.",
+      "confidence": 0.98,
+      "status": "pending",
+      "version": 1,
+      "rationale": "Multiple users pasted concrete errors showing denied model access and role-policy rejection for Bedrock operations.",
+      "provenance": {
+        "runId": "discord-chat-hackathon-aws-lof",
+        "sourceMessageIds": ["msg-004", "msg-008", "msg-011", "msg-026"],
+        "excerpts": ["Model access is denied", "is not authorized to perform: bedrock:CreateAgent", "IAM WSParticipantRole says us-west-2 us-east-1 cannot be used"],
+        "passVersion": 1
+      }
+    },
+    {
+      "id": "fact-003",
+      "text": "Team members requested a direct AWS support contact for Bedrock/IAM issues and asked if a designated technical support channel existed.",
+      "confidence": 0.95,
+      "status": "pending",
+      "version": 1,
+      "rationale": "Several asks were explicitly directed at finding official support during the account/permission failure period.",
+      "provenance": {
+        "runId": "discord-chat-hackathon-aws-lof",
+        "sourceMessageIds": ["msg-012", "msg-013", "msg-014"],
+        "excerpts": ["designated AWS point of contact or tech support channel", "Same question."],
+        "passVersion": 1
+      }
+    },
+    {
+      "id": "fact-004",
+      "text": "Participants reported that Bedrock inference calls were possible, but deploying services like EC2 was not working under their account permissions.",
+      "confidence": 0.95,
+      "status": "pending",
+      "version": 1,
+      "rationale": "This is corroborated by multiple messages where one user claimed inference success and another explicitly noted inability to spin up EC2.",
+      "provenance": {
+        "runId": "discord-chat-hackathon-aws-lof",
+        "sourceMessageIds": ["msg-022", "msg-023", "msg-024"],
+        "excerpts": ["I tested, I can use bedrock with no issue", "it doesn't let me to spin up ec2", "No ECR, ECS , EC2 etc permissions"],
+        "passVersion": 1
+      }
+    },
+    {
+      "id": "fact-005",
+      "text": "At least one user reported not seeing any reliable deployment path and could not deploy ECS despite asking for help.",
+      "confidence": 0.9,
+      "status": "pending",
+      "version": 1,
+      "rationale": "There are messages describing service deployment errors even after another user suggested ECS might be possible.",
+      "provenance": {
+        "runId": "discord-chat-hackathon-aws-lof",
+        "sourceMessageIds": ["msg-015", "msg-017", "msg-018", "msg-019", "msg-028"],
+        "excerpts": ["No ECR, ECS , EC2 etc permissions", "u can deploy ecs", "Ohh were you able to use it? For my setup its giving permission error only", "actually no", "Had to go to AWS table and got help"],
+        "passVersion": 1
+      }
+    },
+    {
+      "id": "fact-006",
+      "text": "CopilotKit announced an updated prize to a pair of Meta Ray-Ban glasses for each member of the top two teams.",
+      "confidence": 0.99,
+      "status": "pending",
+      "version": 1,
+      "rationale": "The organizer posted an explicit correction to the CopilotKit award format in the same minute-level channel updates.",
+      "provenance": {
+        "runId": "discord-chat-hackathon-aws-lof",
+        "sourceMessageIds": ["msg-007"],
+        "excerpts": ["CopilotKit has updated their prizes to: Top two teams will each receive a pair of Meta Ray Bans"],
+        "passVersion": 1
+      }
+    },
+    {
+      "id": "fact-007",
+      "text": "Lenka confirmed that participants should submit GitHub link, demo video, track selections, and product answers in the event submission form.",
+      "confidence": 0.98,
+      "status": "pending",
+      "version": 1,
+      "rationale": "This was the direct checklist response from the organizer in reply to repeated submission questions.",
+      "provenance": {
+        "runId": "discord-chat-hackathon-aws-lof",
+        "sourceMessageIds": ["msg-041", "msg-042", "msg-043", "msg-045"],
+        "excerpts": ["Please review the submission form", "submit your Github link, a demo video, pick your tracks, and answer the questions", "https://forms.gle/JLpoa8eZPtniyg6BA"],
+        "passVersion": 1
+      }
+    }
+  ]
+}
