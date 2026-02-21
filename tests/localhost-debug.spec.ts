@@ -28,7 +28,7 @@ test('localhost lyrebird debug render + flow', async ({ page }) => {
   await page.screenshot({ path: 'test-results/manual/01-home.png', fullPage: true })
 
   await expect(page.getByRole('heading', { name: 'Lyrebird' })).toBeVisible()
-  await page.getByRole('button', { name: /Run Yolk/ }).click()
+  await page.getByText('Run Yolk').click()
   await expect(page.getByText('Yolk produced explainable facts. Review and transform.')).toBeVisible()
 
   await page.getByRole('button', { name: '🔍' }).click()

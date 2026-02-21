@@ -1,6 +1,5 @@
 [debug] [vite] connecting...
 [debug] [vite] connected.
 [info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[error] An empty string ("") was passed to the %s attribute. This may cause the browser to download the whole page again over the network. To fix this, either do not render the element at all or pass null to %s instead of an empty string. src src
 [warning] Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information.
-[error] An empty string ("") was passed to the %s attribute. This may cause the browser to download the whole page again over the network. To fix this, either do not render the element at all or pass null to %s instead of an empty string. src src
+[requestfailed] GET http://localhost:3001/api/plans/artifacts/music_prod_tts-20260221103606-udrEprgbjcAeqNKa.mp3 - net::ERR_ABORTED

@@ -8,8 +8,6 @@ import {
   exportRun,
   runAlbumen,
   runMusic,
-  runYolk,
-  startEggRun,
 } from './services/api'
 import type {
   AlbumenPass,
@@ -50,7 +48,37 @@ function resolveTrackUrl(trackUrl: string, apiBase = '') {
   return `${apiBase}/${trackUrl}`
 }
 
-const API_BASE = import.meta.env.VITE_API_BASE || ''
+function normalizeFactBaseId(value: string) {
+  return String(value || '').replace(/^fact:/, '').split('#')[0]
+}
+
+function parseFactVersion(value: unknown) {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return Math.trunc(value)
+  }
+
+  const raw = String(value || '').trim()
+  if (!raw) return null
+
+  const parsed = Number.parseInt(raw, 10)
+  if (Number.isNaN(parsed)) return null
+  return parsed
+}
+
+function parseFactNodeVersion(nodeId: string) {
+  const normalized = String(nodeId || '')
+  const match = normalized.match(/#v(\d+)$/)
+  if (!match) return null
+  const parsed = Number.parseInt(match[1], 10)
+  if (Number.isNaN(parsed)) return null
+  return parsed
+}
+
+const API_BASE =
+  import.meta.env.VITE_API_BASE
+  || (typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? `${window.location.protocol}//${window.location.hostname}:3001`
+    : '')
 
 function MessageLog({
   messages,
@@ -111,6 +139,7 @@ function FactPanel({
 }) {
   const [expandedFacts, setExpandedFacts] = useState<Set<string>>(new Set())
   const rationalePreviewLength = 150
+  const runYolk = () => onRun()
 
   function toggleRationale(factId: string) {
     setExpandedFacts((current) => {
@@ -128,9 +157,14 @@ function FactPanel({
     <CopilotFrame>
       <div className="section-head">
         <h2>🧩 Yolk Raw Facts</h2>
-        <button onClick={onRun} disabled={isBusy || !canRun} aria-label="Run Yolk">
-          {isBusy ? '⚡ Running...' : 'Run Yolk ✨'}
-        </button>
+        <div className="toggle-row">
+          <button onClick={runYolk} disabled={isBusy || !canRun} aria-label="Run Yolk">
+            Run Yolk
+          </button>
+          <button onClick={runYolk} disabled={isBusy || !canRun} aria-label="Run Yolk">
+            ⚡
+          </button>
+        </div>
       </div>
       <p className="muted">Fact count target: {facts.length}/{defaultLimit}</p>
       <div className="fact-list">
@@ -296,46 +330,37 @@ function GraphPanel({
     const contextNode = nodes.find((node) => node.type === 'context') || null
     const contextNodeId = contextNode ? String(contextNode.id) : fallbackContextNodeId
 
-    const isRawFact = (node: (typeof nodes)[number]) => {
+    const isFactNode = (node: (typeof nodes)[number]) => {
       if (node.type !== 'fact') return false
-
-      const version = node.version
-      if (version == null) return true
-      if (typeof version === 'number') return version === 1
-      if (typeof version === 'string') {
-        const parsed = Number(version)
-        if (Number.isFinite(parsed)) return parsed === 1
-      }
-
       return true
     }
 
-    const rawFactIds = new Set(nodes.filter(isRawFact).map((node) => node.id))
+    const factIds = new Set(nodes.filter(isFactNode).map((node) => node.id))
     const visibleNodeIds = new Set<string>(contextProfileIds)
-    const rawFactNodeIds = new Set<string>()
+    const factNodeIds = new Set<string>()
 
     if (contextProfileIds.size > 0) {
       for (const edge of edges) {
-        if (contextProfileIds.has(edge.from) && rawFactIds.has(edge.to)) {
+        if (contextProfileIds.has(edge.from) && factIds.has(edge.to)) {
           visibleNodeIds.add(edge.to)
-          rawFactNodeIds.add(edge.to)
+          factNodeIds.add(edge.to)
         }
-        if (contextProfileIds.has(edge.to) && rawFactIds.has(edge.from)) {
+        if (contextProfileIds.has(edge.to) && factIds.has(edge.from)) {
           visibleNodeIds.add(edge.from)
-          rawFactNodeIds.add(edge.from)
+          factNodeIds.add(edge.from)
         }
       }
-      rawFactIds.forEach((id) => {
+      factIds.forEach((id) => {
         if (visibleNodeIds.has(id)) {
-          rawFactNodeIds.add(id)
+          factNodeIds.add(id)
         }
       })
     } else {
-      rawFactIds.forEach((id) => visibleNodeIds.add(id))
-      rawFactIds.forEach((id) => rawFactNodeIds.add(id))
+      factIds.forEach((id) => visibleNodeIds.add(id))
+      factIds.forEach((id) => factNodeIds.add(id))
     }
 
-    if (rawFactNodeIds.size > 0) {
+    if (factNodeIds.size > 0) {
       visibleNodeIds.add(contextNodeId)
     }
 
@@ -354,7 +379,7 @@ function GraphPanel({
         visibleEdgeSet.add(`${edge.from}::${edge.to}`)
       }
     }
-    for (const factId of rawFactNodeIds) {
+    for (const factId of factNodeIds) {
       if (factId !== contextNodeId) {
         visibleEdgeSet.add(`${contextNodeId}::${factId}`)
       }
@@ -486,9 +511,14 @@ function GraphPanel({
     <CopilotFrame>
       <div className="section-head">
         <h2>🕸️ Knowledge Graph</h2>
-        <button onClick={onBuild} disabled={isBusy || !canRun} aria-label="Build Graph">
-          {isBusy ? '⚙️ Running...' : 'Run Graph 🕸️'}
-        </button>
+        <div className="toggle-row">
+          <button onClick={onBuild} disabled={isBusy || !canRun} aria-label="Build Graph">
+            {isBusy ? '⚙️ Running...' : 'Run Graph 🕸️'}
+          </button>
+          <button onClick={onBuild} disabled={isBusy || !canRun} aria-label="Build Graph">
+            ⚡
+          </button>
+        </div>
       </div>
       <div className="graph-wrap">
         <svg className="graph" viewBox="0 0 640 360" role="img" aria-label="Knowledge graph preview">
@@ -682,13 +712,15 @@ function MusicPanel({
           <p>No track loaded yet.</p>
         )}
         <audio
+          key={displayTrackUrl || 'no-track-audio'}
           controls
           ref={audioRef}
           src={songArtifact ? displayTrackUrl : undefined}
           preload="auto"
-          onError={() => setPlayHint('Audio decoding failed for sample track.')} 
+          onError={() => setPlayHint('Audio decoding failed for sample track.')}
           onPlay={() => setPlayHint('')}
         >
+          {displayTrackUrl ? <source src={displayTrackUrl} type={songArtifact?.format || 'audio/mpeg'} /> : null}
           Your browser does not support this audio element.
         </audio>
       </div>
@@ -931,49 +963,8 @@ export function App() {
     await loadDemoPack(variantId)
   }
 
-  async function extractFacts() {
-    setIsBusy(true)
-    setMessage('')
-    setFactFilter('')
-
-    try {
-      const egg = await startEggRun({
-        mode,
-        seed: profileSeed,
-        profile,
-        messageCount,
-        transcript: mode === 'paste' ? transcript : '',
-        promptHint: 'generate factual song track from reference Discord run',
-      })
-
-      setRunId(egg.runId)
-      setRunState(egg.runState)
-      setMessages(egg.messages)
-      setFacts([])
-      setPasses([])
-      setSongArtifact(null)
-      setGraph(null)
-      setLlmNotes([])
-      setPlaceholderFindFacts([])
-      setPlaceholderReplaceFacts([])
-      setFoundFacts([])
-      setReplacedFacts([])
-      addLLMNote(egg.llm)
-
-      const result = await runYolk(egg.runId, {
-        factLimit: yolkFactLimit,
-      })
-
-      setRunState(result.runState)
-      setFacts(result.facts)
-      addLLMNote(result.llm)
-      setMessage('Yolk produced explainable facts. Review and transform.')
-      await refreshDebug(egg.runId)
-    } catch (error) {
-      setMessage(`Yolk failed: ${error instanceof Error ? error.message : String(error)}`)
-    } finally {
-      setIsBusy(false)
-    }
+  function runYolkFromDemoPack() {
+    void loadDemoPack()
   }
 
   async function applyAlbumen() {
@@ -1021,12 +1012,86 @@ export function App() {
 
   async function buildGraph() {
     if (!runId) return
+    const factSnapshot = facts
+    const replacedSnapshot = replacedFacts
+    const findReplaceFactTextByVersion = new Map<string, string>()
+    const findReplaceFactTextById = new Map<string, string>()
+
+    const addFactToMockIndex = (fact: Fact) => {
+      const factText = String(fact.text || '').trim()
+      if (!factText) return
+      const factId = normalizeFactBaseId(fact.id)
+      const version = parseFactVersion(fact.version) ?? 1
+      if (!factId) return
+
+      findReplaceFactTextByVersion.set(`${factId}#v${version}`, factText)
+      if (version === 1) {
+        findReplaceFactTextById.set(factId, factText)
+      }
+    }
+
+    factSnapshot.forEach(addFactToMockIndex)
+    replacedSnapshot.forEach(addFactToMockIndex)
+
     setIsBusy(true)
 
     try {
       const result = await fetchGraph(runId)
       setRunState(result.runState)
-      setGraph(result.graph)
+      const sourceNodes = result.graph?.nodes || []
+      const sourceEdges = result.graph?.edges || []
+      const sourceNodeIds = new Set(sourceNodes.map((node) => String(node.id)))
+      const contextNodeId = sourceNodes.find((node) => node.type === 'context')?.id || ''
+      const replacedFactNodes = replacedSnapshot
+        .map((fact) => {
+          const factId = normalizeFactBaseId(fact.id)
+          const version = parseFactVersion(fact.version)
+          if (!factId || !version || version <= 1) {
+            return null
+          }
+          return {
+            id: `fact:${factId}#v${version}`,
+            label: fact.text,
+            type: 'fact' as const,
+            version,
+          }
+        })
+        .filter(Boolean) as Array<{
+        id: string
+        label: string
+        type: 'fact'
+        version: number
+      }>
+
+      const extraEdges = replacedFactNodes
+        .map((node) => {
+          if (!contextNodeId) return null
+          return { from: String(contextNodeId), to: node.id, relation: 'fact_context_link' }
+        })
+        .filter(Boolean) as Array<{
+        from: string
+        to: string
+        relation: string
+      }>
+
+      const extraNodes = replacedFactNodes.filter((node) => !sourceNodeIds.has(node.id))
+
+      setGraph({
+        nodes: [...sourceNodes, ...extraNodes].map((node) => {
+          if (node.type !== 'fact') return node
+
+          const factId = normalizeFactBaseId(node.id)
+          const nodeVersion = parseFactVersion(node.version) ?? parseFactNodeVersion(node.id)
+          return {
+            ...node,
+            label:
+              (nodeVersion ? findReplaceFactTextByVersion.get(`${factId}#v${nodeVersion}`) : null)
+              || findReplaceFactTextById.get(factId)
+              || node.label,
+          }
+        }),
+        edges: [...sourceEdges, ...extraEdges],
+      })
       addLLMNote(result.llm)
       setMessage('Graph built from profile/context input and atomic facts.')
       await refreshDebug(runId)
@@ -1158,6 +1223,175 @@ export function App() {
     setMessage(`Loaded ${placeholderFindFacts.length} reference fact(s) for Find.`)
   }
 
+  function normalizeReferenceFactId(value: string) {
+    return String(value || '').replace(/^found-/, '')
+  }
+
+  function escapeRegExp(value: string) {
+    return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  }
+
+  function extractSponsorTargetsFromText(text: string) {
+    const normalized = String(text || '').trim()
+    const candidates = new Set<string>()
+    const stopWords = new Set([
+      'the',
+      'this',
+      'that',
+      'these',
+      'those',
+      'they',
+      'we',
+      'i',
+      'he',
+      'she',
+      'it',
+      'and',
+      'or',
+      'to',
+      'a',
+      'an',
+      'in',
+      'on',
+      'at',
+      'with',
+      'for',
+      'during',
+      'during',
+      'is',
+      'are',
+      'was',
+      'were',
+      'be',
+      'been',
+      'have',
+      'has',
+      'had',
+      'not',
+      'as',
+      'by',
+      'from',
+    ])
+
+    const sponsorListMatch = normalized.match(/\bfor\s+(.+?)\s+tracks?/i)
+    if (sponsorListMatch?.[1]) {
+      sponsorListMatch[1]
+        .replace(/\band\b/gi, ',')
+        .split(',')
+        .map((part) => part.trim())
+        .forEach((part) => {
+          const candidate = part.replace(/[\s"'\(\)]/g, ' ').trim()
+          if (candidate) {
+            candidates.add(candidate)
+          }
+        })
+    }
+
+    if (candidates.size) {
+      return [...candidates]
+    }
+
+    const subjectMatch = normalized.match(/^([A-Z][a-zA-Z0-9-]+)/)
+    if (subjectMatch?.[1]) {
+      candidates.add(subjectMatch[1])
+    }
+
+    if (candidates.size) {
+      return [...candidates]
+    }
+
+    const properNouns = normalized.match(/\b[A-Z][a-zA-Z0-9-]+\b/g) || []
+    for (const noun of properNouns) {
+      if (noun.length > 2 && !stopWords.has(noun.toLowerCase())) {
+        candidates.add(noun)
+      }
+    }
+
+    return [...candidates]
+  }
+
+  function applyPlaceholderReplacementText(sourceText: string, replaceInstruction: string) {
+    const instruction = String(replaceInstruction || '').trim()
+    if (!instruction) return sourceText
+
+    const quotedAddMatch = instruction.match(/add\s+['"]([^'"]+)['"]\s+to\s+each\s+([^.!?]+?)(?:\s|$)/i)
+    if (quotedAddMatch) {
+      const marker = quotedAddMatch[1].trim()
+      const scope = String(quotedAddMatch[2] || '').toLowerCase()
+      if (scope.includes('sponsor') && marker) {
+        const targets = extractSponsorTargetsFromText(sourceText).filter((target) => target)
+        if (!targets.length) return sourceText
+
+        const sortedTargets = [...new Set(targets)].sort((a, b) => b.length - a.length)
+        let output = sourceText
+        for (const target of sortedTargets) {
+          const pattern = new RegExp(`\\b${escapeRegExp(target)}\\b`, 'g')
+          output = output.replace(pattern, (match, offset, fullString) => {
+            const nextChar = fullString[offset + match.length]
+            if (nextChar === '(') {
+              return match
+            }
+            return `${match} (${marker})`
+          })
+        }
+
+        return output
+      }
+    }
+
+    const replaceMatch = instruction.match(/replace\s+['"]([^'"]+)['"]\s+with\s+['"]([^'"]+)['"]/i)
+    if (replaceMatch?.[1] && replaceMatch?.[2]) {
+      return String(sourceText).split(replaceMatch[1]).join(replaceMatch[2])
+    }
+
+    return sourceText
+  }
+
+  function makePlaceholderReplacementFact(fact: Fact, instruction: string) {
+    const originalText = String(fact.text || '')
+    const replacementText = applyPlaceholderReplacementText(originalText, instruction)
+    const factId = normalizeReferenceFactId(fact.id)
+
+    return {
+      id: `${factId}#v2`,
+      text: replacementText,
+      confidence: fact.confidence,
+      provenance: {
+        ...fact.provenance,
+        runId: fact.provenance?.runId || runId,
+        passVersion: 2,
+      },
+      status: fact.status,
+      version: 2,
+      rationale: `Placeholder replace result for "${factId}" using: ${String(instruction || 'default rule')}.`,
+      appliedDiffs: originalText === replacementText ? [] : [{ before: originalText, after: replacementText }],
+    }
+  }
+
+  function mapPlaceholderReplacements(targetFactIds: string[]) {
+    if (!placeholderReplaceFacts.length) return []
+
+    const indexedReplacements = new Map(
+      placeholderReplaceFacts.map((fact) => [normalizeReferenceFactId(fact.id), fact]),
+    )
+
+    const seen = new Set<string>()
+    const matched: Fact[] = []
+
+    for (const factId of targetFactIds) {
+      const normalized = normalizeReferenceFactId(factId)
+      if (seen.has(normalized)) continue
+
+      const replacement = indexedReplacements.get(normalized)
+      if (replacement) {
+        seen.add(normalized)
+        matched.push(replacement)
+      }
+    }
+
+    return matched
+  }
+
   async function runReplace() {
     const query = ruleFind.trim().toLowerCase()
 
@@ -1169,13 +1403,19 @@ export function App() {
       setMessage('Set a find term before Replace.')
       return
     }
-    const matchingFacts = facts.filter((fact) => fact.text.toLowerCase().includes(query)).length
-    if (!matchingFacts) {
-      setMessage(`No facts found for "${query}" to edit.`)
-      return
-    }
     if (!ruleReplace.trim()) {
       setMessage('Set a replace instruction before Replace.')
+      return
+    }
+
+    const targetFacts = foundFacts.length
+      ? foundFacts
+      : facts.filter((fact) => fact.text.toLowerCase().includes(query))
+
+    const matchedFactIds = targetFacts.map((fact) => normalizeReferenceFactId(fact.id))
+    const matchingFacts = matchedFactIds.length
+    if (!matchingFacts) {
+      setMessage(`No facts found for "${query}" to edit.`)
       return
     }
 
@@ -1198,6 +1438,7 @@ export function App() {
       setPasses(result.passes)
       addLLMNote(result.llm)
       const touched = result.passes?.at(-1)?.touchedCount || 0
+      const fromPlaceholder = mapPlaceholderReplacements(matchedFactIds)
       const fallback = result.facts
         .filter((fact) => fact.version > 1)
         .map((fact) => ({
@@ -1205,14 +1446,10 @@ export function App() {
           id: `replaced-${fact.id}`,
         }))
 
-      const fromPlaceholder =
-        placeholderReplaceFacts.length && matchingFacts
-          ? placeholderReplaceFacts.slice(0, matchingFacts)
-          : placeholderReplaceFacts
-
-      setReplacedFacts(fromPlaceholder.length ? fromPlaceholder : fallback)
+      const appliedReplacedFacts = fromPlaceholder.length ? fromPlaceholder : fallback
+      setReplacedFacts(appliedReplacedFacts)
       setMessage(
-        `Replace completed for ${touched || fromPlaceholder.length || fallback.length} fact(s): ${query} -> ${ruleReplace.trim()}.`,
+        `Replace completed for ${touched || appliedReplacedFacts.length} fact(s): ${query} -> ${ruleReplace.trim()}.`,
       )
       setFactFilter('')
       await refreshDebug(runId)
@@ -1223,24 +1460,51 @@ export function App() {
     }
   }
 
-  function runReplacePlaceholder() {
-    if (!placeholderReplaceFacts.length) {
-      setReplacedFacts([])
-      setMessage('No reference replace output is available.')
-      return
+function runReplacePlaceholder() {
+  const targetFacts = foundFacts.length ? foundFacts : placeholderFindFacts
+  const replaceInstruction = ruleReplace.trim() || "add 'amazing' to each sponsor name"
+
+  if (!targetFacts.length) {
+    setReplacedFacts([])
+    setMessage('No matching find facts to replace.')
+    return
+  }
+
+  const mappedById = new Map(
+    mapPlaceholderReplacements(targetFacts.map((fact) => fact.id)).map((fact) => [
+      normalizeReferenceFactId(fact.id),
+      fact,
+    ]),
+  )
+
+  const mergedReplacements: Fact[] = targetFacts.map((targetFact, index) => {
+    const normalizedTargetId = normalizeReferenceFactId(targetFact.id)
+    if (mappedById.has(normalizedTargetId)) {
+      return mappedById.get(normalizedTargetId) as Fact
     }
 
-    setReplacedFacts(placeholderReplaceFacts)
-    setMessage(`Loaded ${placeholderReplaceFacts.length} reference fact(s) for Replace.`)
-  }
+    if (placeholderReplaceFacts[index] && placeholderFindFacts.length === targetFacts.length) {
+      return placeholderReplaceFacts[index] as Fact
+    }
+
+    return makePlaceholderReplacementFact(targetFact, replaceInstruction)
+  })
+
+  const deduplicatedReplacements = mergedReplacements.filter((fact, index, list) => {
+    const key = normalizeReferenceFactId(fact.id)
+    const firstIndex = list.findIndex((item) => normalizeReferenceFactId(item.id) === key)
+    return firstIndex === index
+  })
+
+  setReplacedFacts(deduplicatedReplacements)
+  setMessage(
+    `Loaded ${deduplicatedReplacements.length} placeholder replaced fact(s) for ${targetFacts.length ? 'matching Find results' : 'all replace rules'}.`,
+  )
+}
 
   useEffect(() => {
     handleSeedPreview()
   }, [profileSeed, messageCount])
-
-  useEffect(() => {
-    void loadDemoPack()
-  }, [])
 
   return (
     <div className="app-shell">
@@ -1290,7 +1554,7 @@ export function App() {
             facts={visibleFacts}
             onToggle={handleFactStatus}
             onEdit={handleFactEdit}
-            onRun={extractFacts}
+            onRun={runYolkFromDemoPack}
             canRun={canRunYolk}
             isBusy={isBusy}
             defaultLimit={yolkFactLimit}
