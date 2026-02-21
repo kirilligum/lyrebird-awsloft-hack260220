@@ -34,6 +34,24 @@ function CopilotFrame({ children }: { children: ReactNode }) {
   return <section className="copilot-card">{children}</section>
 }
 
+function resolveTrackUrl(trackUrl: string, apiBase = '') {
+  if (!trackUrl) {
+    return ''
+  }
+
+  if (/^[a-zA-Z][a-zA-Z\d+.-]*:/.test(trackUrl)) {
+    return trackUrl
+  }
+
+  if (trackUrl.startsWith('/')) {
+    return `${apiBase}${trackUrl}`
+  }
+
+  return `${apiBase}/${trackUrl}`
+}
+
+const API_BASE = import.meta.env.VITE_API_BASE || ''
+
 function MessageLog({
   messages,
   showRawJson,
@@ -117,6 +135,7 @@ function FactPanel({
       <p className="muted">Fact count target: {facts.length}/{defaultLimit}</p>
       <div className="fact-list">
         {facts.map((fact) => {
+          const factIndex = facts.indexOf(fact) + 1
           const rationale = fact.rationale || 'Derived from source messages.'
           const isExpanded = expandedFacts.has(fact.id)
           const shouldTruncate = rationale.length > rationalePreviewLength
@@ -133,9 +152,7 @@ function FactPanel({
               >
                 ✕
               </button>
-              <strong>Fact #{fact.version}</strong>
-              <span>confidence {formatPercent(fact.confidence)}</span>
-              <span>status {fact.status}</span>
+              <strong>Fact #{factIndex}</strong>
               <p className="fact__why">
                 <span className="fact__why-title">Why:</span>
                 <span
@@ -546,25 +563,36 @@ function MusicPanel({
   const [mockOnly, setMockOnly] = useState(false)
   const audioRef = useRef<HTMLAudioElement>(null)
   const [playHint, setPlayHint] = useState('')
+  const displayTrackUrl = resolveTrackUrl(songArtifact?.trackUrl || '', API_BASE)
 
-  function tryPlayTrack(trackUrl?: string) {
+  async function tryPlayTrack(trackUrl?: string) {
     if (!audioRef.current) return
 
-    if (trackUrl && trackUrl !== songArtifact?.trackUrl) {
-      audioRef.current.src = trackUrl
+    const resolvedTrackUrl = resolveTrackUrl(trackUrl || '', API_BASE)
+
+    if (!resolvedTrackUrl) {
+      setPlayHint('No track URL available for playback.')
+      return
+    }
+
+    if (!audioRef.current.src || resolvedTrackUrl !== audioRef.current.src) {
+      audioRef.current.src = resolvedTrackUrl
       audioRef.current.load()
     }
 
-    audioRef.current.play().then(() => {
+    audioRef.current.currentTime = 0
+
+    try {
+      await audioRef.current.play()
       setPlayHint('')
-    }).catch(() => {
+    } catch {
       setPlayHint('Browser blocked auto-play. Click the audio control to start.')
-    })
+    }
   }
 
-  const handleLoadPlaceholder = () => {
+  const handleLoadPlaceholder = async () => {
     const trackUrl = onGeneratePlaceholder()
-    tryPlayTrack(trackUrl)
+    await tryPlayTrack(trackUrl)
   }
 
   const handleGenerateSong = () => {
@@ -581,7 +609,7 @@ function MusicPanel({
 
   useEffect(() => {
     if (!songArtifact || placeholderPlayToken <= 0) return
-    tryPlayTrack(songArtifact.trackUrl)
+    void tryPlayTrack(songArtifact.trackUrl)
   }, [placeholderPlayToken, songArtifact?.trackUrl])
 
   return (
@@ -653,7 +681,14 @@ function MusicPanel({
         ) : (
           <p>No track loaded yet.</p>
         )}
-        <audio controls ref={audioRef} src={songArtifact?.trackUrl || ''} preload="auto">
+        <audio
+          controls
+          ref={audioRef}
+          src={songArtifact ? displayTrackUrl : undefined}
+          preload="auto"
+          onError={() => setPlayHint('Audio decoding failed for sample track.')} 
+          onPlay={() => setPlayHint('')}
+        >
           Your browser does not support this audio element.
         </audio>
       </div>
