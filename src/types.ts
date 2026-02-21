@@ -10,6 +10,23 @@ export type Message = {
   isSynthetic: boolean
 }
 
+export type LLMCallSummary = {
+  task: string
+  model: string
+  stage: string
+  confidence: number
+  rationale: string
+  payloadPreview: string
+  suggestions: string[]
+  metadata: {
+    source: string
+    latencyMs: number
+    runId?: string
+    traceId?: string
+  }
+  createdAt: string
+}
+
 export type FactStatus = 'pending' | 'approved' | 'removed' | 'rewritten'
 
 export type Fact = {
@@ -128,4 +145,5 @@ export type RunBundle = {
   graph: GraphData
   songArtifact: SongArtifact | null
   version: number
+  llmNotes?: LLMCallSummary[]
 }

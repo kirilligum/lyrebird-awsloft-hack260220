@@ -101,6 +101,13 @@ h3 {
   justify-content: space-between;
   align-items: baseline;
   margin-bottom: 0.6rem;
+  gap: 0.8rem;
+}
+
+.section-head button {
+  border-radius: 999px;
+  padding: 0.24rem 0.62rem;
+  font-size: 0.74rem;
 }
 
 .control-row {
@@ -203,6 +210,15 @@ button:disabled {
   gap: 0.45rem;
   max-height: 380px;
   overflow: auto;
+}
+
+.mock-json {
+  margin-top: 0.6rem;
+  max-height: 220px;
+  padding: 0.6rem;
+  border-radius: 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(2, 10, 26, 0.68);
 }
 
 .message {
@@ -355,6 +371,37 @@ button:disabled {
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 0.7rem;
   padding: 0.45rem;
+}
+
+.llm-notes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+  max-height: 300px;
+  overflow: auto;
+}
+
+.llm-notes li {
+  display: grid;
+  gap: 0.28rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 0.7rem;
+  padding: 0.5rem;
+}
+
+.llm-notes span {
+  color: #b7d5f2;
+  font-size: 0.86rem;
+}
+
+.llm-suggestions {
+  margin: 0.15rem 0 0;
+  padding-left: 1.1rem;
+  color: #d2e9ff;
+  display: grid;
+  gap: 0.2rem;
 }
 
 pre {

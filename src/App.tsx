@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { CopilotSidebar } from '@copilotkit/react-ui'
 import {
   fetchSimulatedLog,
   fetchGraph,
@@ -17,6 +18,7 @@ import type {
   Message,
   RunBundle,
   RunState,
+  LLMCallSummary,
   SongArtifact,
   TelemetryEvent,
 } from './types'
@@ -48,12 +50,25 @@ function StageTimeline({ stage }: { stage: string }) {
   )
 }
 
-function MessageLog({ messages }: { messages: Message[] }) {
+function MessageLog({
+  messages,
+  showRawJson,
+  onToggleRawJson,
+}: {
+  messages: Message[]
+  showRawJson: boolean
+  onToggleRawJson: () => void
+}) {
   return (
     <CopilotFrame>
       <div className="section-head">
         <h2>Discord Log Simulation</h2>
-        <span>{messages.length} messages</span>
+        <div className="toggle-row">
+          <span>{messages.length} messages</span>
+          <button onClick={onToggleRawJson} type="button">
+            {showRawJson ? 'Hide JSON' : 'Show JSON'}
+          </button>
+        </div>
       </div>
       <div className="message-log">
         {messages.map((message) => (
@@ -68,6 +83,9 @@ function MessageLog({ messages }: { messages: Message[] }) {
         ))}
         {!messages.length && <p className="muted">No messages yet. Start with Egg to generate a run.</p>}
       </div>
+      {showRawJson && (
+        <pre className="mock-json">{JSON.stringify(messages, null, 2)}</pre>
+      )}
     </CopilotFrame>
   )
 }
@@ -187,7 +205,7 @@ function MusicPanel({
 }) {
   const [prompt, setPrompt] = useState('Upbeat, playful instrumentation with layered hi-hats and soft bass.')
   const [mood, setMood] = useState('playful')
-  const [mockOnly, setMockOnly] = useState(true)
+  const [mockOnly, setMockOnly] = useState(false)
 
   return (
     <CopilotFrame>
@@ -217,6 +235,8 @@ function MusicPanel({
           <h3>Song Artifact</h3>
           <p>Provider: {songArtifact.audioProvider}</p>
           <p>Format: {songArtifact.format}</p>
+          <p>Lyrics Source: {songArtifact.providerMeta?.lyricSource || 'fallback template'}</p>
+          <p>Generated Model: {songArtifact.providerMeta?.rawModel || 'n/a'}</p>
           <p>Duration: {Math.round(songArtifact.durationMs / 1000)}s</p>
           <audio controls src={songArtifact.trackUrl} preload="auto">
             Your browser does not support this audio element.
@@ -254,20 +274,53 @@ function TelemetryPanel({ events }: { events: TelemetryEvent[] }) {
   )
 }
 
+function LLMInsightsPanel({ notes }: { notes: LLMCallSummary[] }) {
+  return (
+    <CopilotFrame>
+      <div className="section-head">
+        <h2>LLM Insights</h2>
+        <span>{notes.length} entries</span>
+      </div>
+      <ul className="llm-notes">
+        {notes.map((note, index) => (
+          <li key={`${note.task}-${note.createdAt}-${index}`}>
+            <strong>{note.task}</strong> · {note.model}
+            <span>confidence {formatPercent(note.confidence)}</span>
+            <span>stage {note.stage}</span>
+            <span>{note.payloadPreview}</span>
+            <p className="muted fact__why">{note.rationale}</p>
+            <p className="muted">
+              {note.metadata?.source || 'mock-inference'} • {note.metadata?.latencyMs || 0}ms
+            </p>
+            <ul className="llm-suggestions">
+              {note.suggestions?.slice(0, 3).map((suggestion) => (
+                <li key={suggestion}>{suggestion}</li>
+              ))}
+            </ul>
+          </li>
+        ))}
+        {!notes.length && <li className="muted">No model trace yet. Run stages to build full provenance.</li>}
+      </ul>
+    </CopilotFrame>
+  )
+}
+
 export function App() {
   const [mode, setMode] = useState<'seeded' | 'paste'>('seeded')
   const [seed, setSeed] = useState('judge-demo-01')
-  const [messageCount, setMessageCount] = useState(30)
+  const [messageCount, setMessageCount] = useState(260)
   const [transcript, setTranscript] = useState('Kai: pushed new instrumentation and fixed edge case.\nLex: we should add replay guardrails.')
   const [runId, setRunId] = useState('')
   const [runState, setRunState] = useState<RunState | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [previewMessages, setPreviewMessages] = useState<Message[]>([])
+  const [showRawJson, setShowRawJson] = useState(false)
   const [facts, setFacts] = useState<Fact[]>([])
   const [passes, setPasses] = useState<AlbumenPass[]>([])
   const [graph, setGraph] = useState<GraphData | null>(null)
   const [songArtifact, setSongArtifact] = useState<SongArtifact | null>(null)
   const [telemetry, setTelemetry] = useState<TelemetryEvent[]>([])
+  const [llmNotes, setLlmNotes] = useState<LLMCallSummary[]>([])
   const [ruleFind, setRuleFind] = useState('emails')
   const [ruleReplace, setRuleReplace] = useState('[REDACTED]')
   const [ruleAction, setRuleAction] = useState<'replace' | 'pii_remove' | 'rewrite_tone'>('replace')
@@ -276,6 +329,11 @@ export function App() {
 
   const stage = runState?.stage || 'idle'
   const canSeed = Boolean(seed)
+
+  function addLLMNote(note?: LLMCallSummary | null) {
+    if (!note) return
+    setLlmNotes((current) => [note, ...current].slice(0, 6))
+  }
 
   async function refreshDebug(runIdValue = runId) {
     if (!runIdValue) return
@@ -320,6 +378,8 @@ export function App() {
       setPasses([])
       setSongArtifact(null)
       setGraph(null)
+      setLlmNotes([])
+      addLLMNote(result.llm)
       setMessage('Egg complete. Run Yolk for extraction.')
       await refreshDebug(result.runId)
     } catch (error) {
@@ -337,6 +397,7 @@ export function App() {
       const result = await runYolk(runId)
       setRunState(result.runState)
       setFacts(result.facts)
+      addLLMNote(result.llm)
       setMessage('Yolk produced explainable facts. Review and transform.')
       await refreshDebug(runId)
     } catch (error) {
@@ -366,6 +427,7 @@ export function App() {
       setRunState(result.runState)
       setFacts(result.facts)
       setPasses(result.passes)
+      addLLMNote(result.llm)
       setMessage('Albumen pass applied. Graph and facts now include transform history.')
       await refreshDebug(runId)
     } catch (error) {
@@ -383,6 +445,7 @@ export function App() {
       const result = await fetchGraph(runId)
       setRunState(result.runState)
       setGraph(result.graph)
+      addLLMNote(result.llm)
       setMessage('Graph built from mock provenance and transform metadata.')
       await refreshDebug(runId)
     } catch (error) {
@@ -404,6 +467,7 @@ export function App() {
       })
       setRunState(result.runState)
       setSongArtifact(result.songArtifact)
+      addLLMNote(result.llm)
       setMessage('Song generated. You can now play the artifact below.')
       await refreshDebug(runId)
     } catch (error) {
@@ -429,6 +493,7 @@ export function App() {
       graph: bundle.graph,
       songArtifact: bundle.songArtifact,
       version: bundle.version,
+      llmNotes: bundle.llmNotes,
     }
     const file = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
     const link = document.createElement('a')
@@ -458,6 +523,11 @@ export function App() {
         <h1>Egg → Yolk → Albumen → Song</h1>
         <p className="muted">Mock-first demo with Copilot-inspired orchestration and MiniMax-aware music generation.</p>
       </header>
+      <CopilotSidebar
+        defaultOpen={false}
+        shortcut="k"
+        instructions="Lyrebird console assistant: ask about stage state, facts quality, or music output summary."
+      />
 
       <main className="layout">
         <section className="controls">
@@ -479,7 +549,7 @@ export function App() {
               <input
                 type="range"
                 min={8}
-                max={120}
+                max={360}
                 value={messageCount}
                 onChange={(event) => setMessageCount(Number(event.target.value))}
               />
@@ -546,10 +616,15 @@ export function App() {
           <GraphPanel graph={graph} />
           <MusicPanel songArtifact={songArtifact} onGenerate={generateSong} inProgress={isBusy} disabled={!runId} />
           <TelemetryPanel events={telemetry} />
-        </section>
+      </section>
 
         <section className="inspector">
-          <MessageLog messages={runId ? messages : previewMessages} />
+          <LLMInsightsPanel notes={llmNotes} />
+          <MessageLog
+            messages={runId ? messages : previewMessages}
+            showRawJson={showRawJson}
+            onToggleRawJson={() => setShowRawJson((current) => !current)}
+          />
           <CopilotFrame>
             <div className="section-head">
               <h2>Pass Ledger</h2>

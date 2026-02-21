@@ -4,6 +4,7 @@ import type {
   Fact,
   GraphData,
   Message,
+  LLMCallSummary,
   RunState,
   SongArtifact,
   TelemetryEvent,
@@ -52,6 +53,7 @@ export async function startEggRun(payload: {
     runState: RunState
     messages: Message[]
     messagesCount: number
+    llm?: LLMCallSummary
   }>('/api/run/egg', {
     method: 'POST',
     body: JSON.stringify(payload),
@@ -66,6 +68,7 @@ export async function runYolk(runId: string) {
     stage: string
     facts: Fact[]
     runState: RunState
+    llm?: LLMCallSummary
   }>(`/api/run/${runId}/yolk`, { method: 'POST', body: JSON.stringify({}) })
 
   return data
@@ -78,6 +81,7 @@ export async function runAlbumen(runId: string, passes: AlbumenPassDraft[]) {
     facts: Fact[]
     passes: AlbumenPass[]
     runState: RunState
+    llm?: LLMCallSummary
   }>(`/api/run/${runId}/albumen`, {
     method: 'POST',
     body: JSON.stringify({ passes }),
@@ -92,6 +96,7 @@ export async function fetchGraph(runId: string) {
     stage: string
     graph: GraphData
     runState: RunState
+    llm?: LLMCallSummary
   }>(`/api/run/${runId}/graph`, { method: 'POST', body: JSON.stringify({}) })
 
   return data
@@ -103,6 +108,8 @@ export async function runMusic(runId: string, payload: { prompt: string; mood: s
     stage: string
     songArtifact: SongArtifact
     runState: RunState
+    llm?: LLMCallSummary
+    lyricSource?: string
   }>(`/api/run/${runId}/music`, {
     method: 'POST',
     body: JSON.stringify(payload),
@@ -135,5 +142,6 @@ export async function exportRun(runId: string) {
     graph: GraphData
     songArtifact: SongArtifact | null
     version: number
+    llmNotes?: LLMCallSummary[]
   }>(`/api/run/${runId}/export`)
 }

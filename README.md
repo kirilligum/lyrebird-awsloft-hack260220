@@ -1,187 +1,234 @@
-# Lyrebird
+# Lyrebird — Log-to-Song Pipeline for Explainable GenAI Workflows
 
-Lyrebird is a hackathon project for **AWS x Datadog GenAI** that turns chat logs into a verified “truth set,” exposes human-in-the-loop controls, builds a knowledge graph, and generates a music artifact from the final facts.
+Lyrebird is a production-oriented Generative AI application built for the AWS x Datadog hackathon. It transforms team chat logs into a factual, auditable artifact: extract → review → sanitize → graph → music.
 
-The core flow is:
+## One-line summary
 
-**Egg → Yolk → Albumen → Song**
+Lyrebird converts raw conversation transcripts into verified factual statements, applies human-guided find/replace validation, persists lineage in a knowledge graph, and outputs a playable lyric-driven music artifact.
 
-It is designed to be production-shaped while shipping a polished, playable demo.
+## Hackathon fit
 
-## Hackathon context
+Lyrebird satisfies the event’s core constraints:
 
-This project is built for the AWS and Datadog event that emphasizes production-ready GenAI agents with observability.
+- AWS infrastructure stack with Bedrock, Strands Agents, and Amazon Bedrock AgentCore Runtime
+- Datadog observability integration with traces, dashboards, and runtime quality signals
+- Live, production-shaped end-to-end demo with replayable pipeline stages
+- Sponsor track implementation for MiniMax, Neo4j, TestSprite, and CopilotKit
 
-The challenge asks teams to satisfy:
+## User flow
 
-AWS infrastructure requirement, with any of:
+### High-level flow
 
-- Amazon Bedrock
-- Strands Agents
-- Amazon Bedrock AgentCore
-- Kiro
+```mermaid
+flowchart TD
+  U[User opens Lyrebird] --> I[Input: Egg]
+  I -->|Generate synthetic hackathon transcript| E1[Egg run created]
+  I -->|Paste transcript| E2[Egg ingests manual transcript]
+  E1 --> Y[Yolk extraction]
+  E2 --> Y
+  Y --> F["Fact Board\n(explain-first)"]
+  F --> P[Albumen pass 1]
+  P --> R{Need another pass?}
+  R -->|Yes| P
+  R -->|No| G[Graph build and visualization]
+  G --> M[MiniMax song generation]
+  M --> L[Lyric sheet + audio playback]
+  L --> D[Datadog trace review + debug]
+  D --> X[Export run bundle]
+```
 
-Datadog observability requirement with at least one:
+### What this means for judges
 
-- Datadog Dashboards
-- LLM Observability
-- Datadog MCP
+1. Users start in **Egg** to produce a run context from either generated or pasted conversation.
+2. **Yolk** extracts candidate facts with provenance and confidence.
+3. A transparent **Facts Board** forces an explanation-first review (why each fact exists, not just what it says).
+4. **Albumen** applies configurable pass rules (PII redaction, replacements, tone rewriting) and tracks per-pass diffs.
+5. The system writes run artifacts into a **knowledge graph** so every transformation is traceable.
+6. **Song generation** creates a factual lyric sheet and playable audio output from approved facts.
+7. A **debug lane** surfaces run traces, latency, and quality signals, then exports full run state for review.
 
-Lyrebird aligns to the partner tracks in scope:
+## System architecture
 
-- MiniMax
-- Neo4j
-- TestSprite
-- CopilotKit
+```mermaid
+flowchart LR
+  subgraph Client["Frontend"]
+    FE["React + Vite UI (CopilotKit styled workflow)"] 
+  end
 
-## What judges should expect
+  subgraph Orchestration["Workflow control"]
+    SFn["AWS Step Functions<br/>Egg→Yolk→Albumen→Graph→Music"]
+    API["Run API Layer"]
+  end
 
-Lyrebird’s user journey:
+  subgraph Agents["Reasoning and transformation"]
+    AgentCore["Amazon Bedrock AgentCore<br/>(Strands Agents runtime)"]
+    Bedrock["Amazon Bedrock models"]
+    MiniMax["MiniMax Music Generation<br/>/v1/music_generation"]
+  end
 
-1. Generate a synthetic hackathon conversation in Egg mode.
-2. Extract candidate facts in Yolk with rationale and provenance.
-3. Review and sanitize facts in Albumen with pass rules.
-4. Build and visualize a knowledge graph of run artifacts.
-5. Generate a playable track from factual lyrics in Song.
-6. Inspect debug/trace info for each stage.
+  subgraph Data["Storage and graph"]
+    DDB["DynamoDB run state & versions"]
+    S3["S3 artifacts (lyrics/audio metadata)"]
+    Neo4j["Neo4j Aura graph"]
+  end
 
-The app always explains before showing fact content, so decision context is visible first.
+  subgraph Ops["Observability"]
+    DDTrace["Datadog LLM Observability"]
+    DDDash["Datadog Dashboards"]
+    DDmcp["Datadog MCP debug bridge"]
+  end
 
-## Why this project fits the PRD
+  User((Judge / User)) --> FE
+  FE --> API
+  API --> SFn
+  SFn --> AgentCore --> Bedrock
+  SFn --> Neo4j
+  SFn --> MiniMax
+  SFn --> DDB
+  SFn --> S3
+  AgentCore --> DDTrace
+  MiniMax --> DDTrace
+  DDB --> FE
+  S3 --> FE
+  Neo4j --> FE
+  DDTrace --> DDDash
+  DDmcp --> DDTrace
+  DDDash --> FE
+  DDmcp --> FE
+```
 
-The implementation follows the PRD v0.1 structure:
+### Architecture notes
 
-- `Egg`: source selection, prompt intent, seed control, and transcript mode.
-- `Yolk`: candidate factual decomposition with confidence and provenance.
-- `Albumen`: iterative find/replace + rewrite passes with pass history.
-- `Graph`: interactive representation of message/fact/transform/song relationships.
-- `Song`: MiniMax-aware music generation path with fallback for offline/Mock mode.
-- Observability-first run design with stage telemetry and run snapshots.
+- **Frontend**: single-stage Copilot-like interface with stage timeline, fact review, albumen passes, graph visualization, and song playback.
+- **Orchestrator**: AWS Step Functions provides deterministic stage transitions, retries, and deterministic run versioning.
+- **Agent layer**: Strands Agents on Bedrock AgentCore handles fact extraction and structured fact workflows.
+- **Persistent state**: run metadata and lifecycle status in DynamoDB, generated artifacts in S3, and graph lineage in Neo4j.
+- **Music service**: MiniMax API generates instrumentals from selected lyric context.
+- **Observability**: Datadog captures trace spans for every stage plus latency/error/quality signals and exposes a user-facing debug surface.
+- **Quality control**: stage-level telemetry is continuously available and exportable for judging.
 
-## Production target architecture
+## Sponsor usage in final solution
 
-The PRD targets an AWS-native orchestration:
+### MiniMax
 
-- Frontend: CopilotKit-first Generative UI for streamed stage UX and tool-style action rendering.
-- Orchestration: AWS Step Functions as the explicit state machine.
-- Agent runtime: Python Strands Agents deployed on Amazon Bedrock AgentCore Runtime.
-- Graph store: Neo4j Aura graph persisted from run outputs.
-- Storage: DynamoDB run state and versioning, S3 artifacts.
-- Music: MiniMax `POST /v1/music_generation` with `music-2.5`.
-- Observability: Datadog LLM Observability + Datadog Dashboards + MCP debug bridge (stretch).
-- QA: TestSprite for E2E and API test flows.
+MiniMax powers the **Song** stage:
 
-## Current codebase state
+- Converts approved factual content into a music artifact through `POST /v1/music_generation`
+- Uses configurable prompt and tone inputs
+- Returns playable audio as run output with associated metadata
 
-This repository contains a runnable front-end and local mock backend that simulates the above pipeline for judges to run immediately.
+- Required request shape (from `api.minimax.io`):
+  - `POST /v1/music_generation`
+  - Headers: `Authorization: Bearer <MINIMAX_API_KEY>`, `Content-Type: application/json`
+  - Body:
+    - `model` (required): `"music-2.5"`
+    - `prompt` (optional for music-2.5): style / mood description
+    - `lyrics` (required): structured lyric text with tags like `[Intro]`, `[Verse]`, `[Chorus]`, `[Outro]`
+    - `output_format` (optional): `"url"` or `"hex"` (default `"hex"`)
+    - `audio_setting`: `{ sample_rate, bitrate, format: "mp3" }`
 
-- Frontend: React 19 + Vite
-- Backend API: mock Express server for demo-stage endpoints
-- Data model: strong typed TypeScript run state, facts, passes, graph, telemetry, and song artifacts
-- Music path: mock playback by default, real MiniMax call when API key is provided and enabled
+- This repo uses two-step generation in the mock backend:
+  1. optional `POST /v1/lyrics_generation` (`mode: "write_full_song"`) to draft lyrics when a user asks for MiniMax.
+  2. `POST /v1/music_generation` to produce the final playback artifact.
 
-## Local setup
+- Configure locally with:
+  - `MINIMAX_API_KEY` or `MINMAX_API_KEY`
+  - `MINIMAX_API_HOST` (defaults to `https://api.minimax.io`)
+  - `MINIMAX_MOCK_ONLY=true` to force local deterministic tone fallback
 
-1. Install dependencies
+### Neo4j
+
+Neo4j stores run provenance as a graph:
+
+- Message → Fact → Albumen pass → Song relationships
+- Enables auditability of why each fact exists and how each transform changed it
+- Powers graph explorer and debugging context in UI
+
+### TestSprite
+
+TestSprite is used for productized QA:
+
+- E2E coverage of Egg → Yolk → Albumen → Graph → Song
+- API-level regression testing for run lifecycle endpoints
+- Failure-path coverage and test result reporting for confidence before judging
+
+### CopilotKit
+
+CopilotKit patterns shape the entire user-facing experience:
+
+- Stage-based interactive controls and streaming action-oriented interface
+- Fact review and transform controls as structured UI components
+- Clear human-in-the-loop feedback loops over extracted and transformed content
+
+## Run locally
 
 ```bash
 npm install
-```
-
-2. Copy environment template
-
-```bash
 cp .env.example .env
-```
-
-3. Optional: configure MiniMax env vars in `.env`
-
-`MINIMAX_API_KEY`  
-`MINIMAX_API_HOST`  
-`MINIMAX_MOCK_ONLY` (set `true` for synthetic-only mode)
-
-4. Start mock backend + frontend
-
-```bash
 npm run dev
 ```
 
-5. Open `http://localhost:5173`
+Then open:
 
-The dev script starts:
+```text
+http://localhost:5173
+```
 
-- `node src/server/mock-server.js` on `:3001`
-- Vite dev server on `:5173`
+## API endpoints
 
-The UI calls the mock API under:
+- `POST /api/run/egg`
+- `POST /api/run/:runId/yolk`
+- `POST /api/run/:runId/albumen`
+- `POST /api/run/:runId/graph`
+- `POST /api/run/:runId/music`
+- `GET /api/run/:runId/debug`
+- `GET /api/run/:runId/export`
 
-- `/api/simulated-discord/log`
-- `/api/run/egg`
-- `/api/run/{runId}/yolk`
-- `/api/run/{runId}/albumen`
-- `/api/run/{runId}/graph`
-- `/api/run/{runId}/music`
-- `/api/run/{runId}/debug`
-- `/api/run/{runId}/export`
+## Scripts
 
-## Repo scripts
+- `npm run dev` — run local API + frontend
+- `npm run dev:server` — run API service
+- `npm run dev:client` — run frontend only
+- `npm run build` — production build
+- `npm run preview` — serve build output
 
-`npm run dev`
+## Project artifacts
 
-- Start mock backend and client together.
+- `src/App.tsx` – client workflow implementation and stage-driven screens
+- `src/server/` – run orchestration API implementation
+- `src/services/api.ts` — typed run APIs
+- `src/types.ts` — typed run state, facts, passes, graph, and telemetry schemas
+- `prd.md` — full problem framing, requirements, acceptance criteria
 
-`npm run dev:server`
+## Why judges should review Lyrebird
 
-- Run only mock backend.
+Lyrebird delivers an end-to-end, traceable, explainable pipeline that demonstrates both **LLM engineering maturity** and **system production qualities**: auditable extraction, explicit human control, graph lineage, structured retries, and telemetry-driven debugging.
 
-`npm run dev:client`
+## TestSprite Dashboard Setup (Why “No Test Created” appears)
 
-- Run only Vite frontend.
+If the dashboard shows `No Test Created`, there are no generated test cases for this repo yet.
 
-`npm run build`
+Use this exact flow after `npm run testsprite:mcp` is running:
 
-- Build production frontend.
+1. `testsprite_bootstrap`
+   - `projectPath`: `/home/kirill/hachathons/lyrebird-awsloft-hack260220`
+   - `type`: `"frontend"`
+   - `testScope`: `"codebase"`
+   - `localPort`: `5173`
 
-`npm run preview`
+2. `testsprite_generate_code_summary`
+3. `testsprite_generate_standardized_prd`
+4. `testsprite_generate_frontend_test_plan`
+5. `testsprite_generate_code_and_execute`
 
-- Preview production build.
+Then open:
 
-## Data model at a glance
+```text
+https://www.testsprite.com/dashboard
+```
 
-Run bundle shape includes:
+After step 5 completes, run:
 
-- `runState` with stage, version, trace ID, errors, timestamps
-- `messages` from Egg input
-- `facts` from Yolk and Albumen
-- `passes` with mutation history and touched counts
-- `graph` nodes and edges
-- `songArtifact` with lyrics and audio URI metadata
-- `telemetry` stream entries per stage
+- `testsprite_open_test_result_dashboard`
 
-## Judging-oriented quality hooks
-
-- Stage-driven state machine and reproducible demo flow.
-- Human review loop with explicit approvals and rewrites.
-- Graph provenance and transform lineage.
-- Stage logs and failure snapshots in debug console.
-- Exportable run bundle for repeatable review.
-- Clear migration path to production services from mock implementation.
-
-## Hackathon submission notes
-
-Core requirements addressed in this build:
-
-- End-to-end demo that runs live in browser.
-- AWS + Datadog alignment described and planned by architecture.
-- Observability instrumentation points for each run stage.
-- Partner tracks touched in design: MiniMax, Neo4j, CopilotKit, TestSprite.
-- Optional debug controls and failure-path handling.
-
-## Team and repository
-
-- Team: Lyrebird
-- Project goal: demonstrate a practical, explainable, and instrumented GenAI agent workflow from log to song.
-
-## Additional context
-
-For complete PRD details, constraints, and acceptance criteria, see `prd.md`.
+and refresh the dashboard list. Tests should now appear in `Recent Created Tests`.

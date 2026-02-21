@@ -24,6 +24,8 @@ trust_level = "trusted"
 
 [projects."/home/kirill/projs/lyrebird-awsloft-hack260220"]
 trust_level = "trusted"
+[projects."/home/kirill/hachathons/lyrebird-awsloft-hack260220"]
+trust_level = "trusted"
 
 
 # [mcp_servers.playwright]
@@ -114,7 +116,7 @@ startup_timeout_sec = 155.0
 command = "fish"
 args = [
   "-lc",
-  "API_KEY=\"$TESTSPRITE_API_KEY\" npx -y @testsprite/testsprite-mcp@latest",
+  "set -l _api_key \"$TESTSPRITE_API_KEY\"; if test -z \"$_api_key\"; set _api_key \"$API_KEY\"; end; if test -z \"$_api_key\"; echo \"TestSprite API key missing. Set TESTSPRITE_API_KEY or API_KEY.\" >&2; exit 1; end; API_KEY=\"$_api_key\" npx -y @testsprite/testsprite-mcp@latest server",
 ]
 startup_timeout_sec = 155.0
 
