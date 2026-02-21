@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test'
 test('localhost lyrebird demo flow', async ({ page }) => {
   page.setDefaultTimeout(120000)
 
-  await page.goto('http://localhost:5173/', { waitUntil: 'networkidle' })
+  await page.goto('/', { waitUntil: 'networkidle' })
 
   await expect(page.getByRole('heading', { name: 'Egg → Yolk → Albumen → Song' })).toBeVisible()
 
@@ -20,7 +20,7 @@ test('localhost lyrebird demo flow', async ({ page }) => {
   await expect(page.getByText('Graph built from mock provenance and transform metadata.')).toBeVisible()
 
   await page.getByRole('button', { name: 'Generate Song' }).click()
-  await expect(page.getByText('Song generated. You can now play the artifact below.')).toBeVisible()
+  await expect(page.getByText('Song generated. You can now play the artifact below.', { exact: true })).toBeVisible({ timeout: 30000 })
 
-  await expect(page.locator('audio')).toBeVisible()
+  await expect(page.locator('audio')).toBeVisible({ timeout: 30000 })
 })

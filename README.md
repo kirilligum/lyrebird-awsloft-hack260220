@@ -21,20 +21,20 @@ Lyrebird satisfies the event’s core constraints:
 
 ```mermaid
 flowchart TD
-  U[User opens Lyrebird] --> I[Input: Egg]
-  I -->|Generate synthetic hackathon transcript| E1[Egg run created]
-  I -->|Paste transcript| E2[Egg ingests manual transcript]
-  E1 --> Y[Yolk extraction]
+  U[🐣 User opens Lyrebird] --> I[🥚 Input: Egg]
+  I -->|🧠 Generate synthetic hackathon transcript| E1[🧪 Egg run created]
+  I -->|📋 Paste transcript| E2[📝 Egg ingests manual transcript]
+  E1 --> Y[🧬 Yolk extraction]
   E2 --> Y
-  Y --> F["Fact Board\n(explain-first)"]
-  F --> P[Albumen pass 1]
-  P --> R{Need another pass?}
-  R -->|Yes| P
-  R -->|No| G[Graph build and visualization]
-  G --> M[MiniMax song generation]
-  M --> L[Lyric sheet + audio playback]
-  L --> D[Datadog trace review + debug]
-  D --> X[Export run bundle]
+  Y --> F["🧾 Fact Board\n(explain-first)"]
+  F --> P[🍳 Albumen pass 1]
+  P --> R{🔁 Need another pass?}
+  R -->|✅ Yes| P
+  R -->|❌ No| G[🕸️ Graph build and visualization]
+  G --> M[🎧 MiniMax song generation]
+  M --> L[🎵 Lyric sheet + audio playback]
+  L --> D[📡 Datadog trace review + debug]
+  D --> X[💾 Export run bundle]
 ```
 
 ### What this means for judges
@@ -52,33 +52,33 @@ flowchart TD
 ```mermaid
 flowchart LR
   subgraph Client["Frontend"]
-    FE["React + Vite UI (CopilotKit styled workflow)"] 
+    FE["🧩 React + Vite UI (CopilotKit styled workflow)"] 
   end
 
   subgraph Orchestration["Workflow control"]
-    SFn["AWS Step Functions<br/>Egg→Yolk→Albumen→Graph→Music"]
-    API["Run API Layer"]
+    SFn["⚙️ AWS Step Functions<br/>Egg→Yolk→Albumen→Graph→Music"]
+    API["🌐 Run API Layer"]
   end
 
   subgraph Agents["Reasoning and transformation"]
-    AgentCore["Amazon Bedrock AgentCore<br/>(Strands Agents runtime)"]
-    Bedrock["Amazon Bedrock models"]
-    MiniMax["MiniMax Music Generation<br/>/v1/music_generation"]
+    AgentCore["🧠 Amazon Bedrock AgentCore<br/>(Strands Agents runtime)"]
+    Bedrock["🧮 Amazon Bedrock models"]
+    MiniMax["🎼 MiniMax Music Generation<br/>/v1/music_generation"]
   end
 
   subgraph Data["Storage and graph"]
-    DDB["DynamoDB run state & versions"]
-    S3["S3 artifacts (lyrics/audio metadata)"]
-    Neo4j["Neo4j Aura graph"]
+    DDB["🗂️ DynamoDB run state & versions"]
+    S3["🗄️ S3 artifacts (lyrics/audio metadata)"]
+    Neo4j["🕸️ Neo4j Aura graph"]
   end
 
   subgraph Ops["Observability"]
-    DDTrace["Datadog LLM Observability"]
-    DDDash["Datadog Dashboards"]
-    DDmcp["Datadog MCP debug bridge"]
+    DDTrace["📊 Datadog LLM Observability"]
+    DDDash["📈 Datadog Dashboards"]
+    DDmcp["🛠️ Datadog MCP debug bridge"]
   end
 
-  User((Judge / User)) --> FE
+  User((👩‍⚖️ Judge / 👤 User)) --> FE
   FE --> API
   API --> SFn
   SFn --> AgentCore --> Bedrock

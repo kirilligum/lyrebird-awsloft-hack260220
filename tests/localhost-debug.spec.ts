@@ -17,7 +17,7 @@ test('localhost lyrebird debug render + flow', async ({ page }) => {
     events.push(`[requestfailed] ${req.method()} ${req.url()} - ${req.failure()?.errorText || 'unknown'}`)
   })
 
-  await page.goto('http://localhost:5173/', { waitUntil: 'networkidle' })
+  await page.goto('/', { waitUntil: 'networkidle' })
   await page.screenshot({ path: 'test-results/manual/01-home.png', fullPage: true })
 
   await expect(page.getByRole('heading', { name: 'Egg → Yolk → Albumen → Song' })).toBeVisible()
@@ -34,9 +34,9 @@ test('localhost lyrebird debug render + flow', async ({ page }) => {
   await expect(page.getByText('Graph built from mock provenance and transform metadata.')).toBeVisible()
 
   await page.getByRole('button', { name: 'Generate Song' }).click()
-  await expect(page.getByText('Song generated. You can now play the artifact below.')).toBeVisible()
+  await expect(page.getByText('Song generated. You can now play the artifact below.', { exact: true })).toBeVisible({ timeout: 30000 })
 
-  await expect(page.locator('audio')).toBeVisible()
+  await expect(page.locator('audio')).toBeVisible({ timeout: 30000 })
   await page.screenshot({ path: 'test-results/manual/02-flow-complete.png', fullPage: true })
   fs.writeFileSync('test-results/manual/browser-events.txt', events.join('\n'))
 })
