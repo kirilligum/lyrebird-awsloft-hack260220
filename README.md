@@ -21,36 +21,33 @@ Lyrebird satisfies the event’s core constraints:
 
 ```mermaid
 flowchart TD
-  U[🐣 User opens Lyrebird]
-  U --> I[⚡ Choose Egg input mode]
+  C[📄 Context]
+  P[👤 Profile]
 
   subgraph Egg["🥚 Egg"]
-    I -->|🧠 Generate synthetic transcript| E1[🧪 Egg run created]
-    I -->|📋 Paste transcript| E2[📝 Egg ingests manual transcript]
-    E1 --> C[📄 Context]
-    E2 --> C
-    U --> P[👤 Profile]
-    C --> Y[🧬 Yolk extraction]
-    P --> Y
-    Y --> A[🍳 Albumen pass 1]
+    Y[🧬 Yolk extraction]
+    A[🍳 Albumen]
+    R{🔁 Need another pass?}
+    F["✅ Final facts"]
   end
 
-  Y --> F["🧾 Fact Board\n(explain-first)"]
-  F --> R{🔁 Need another pass?}
+  C --> Y
+  P --> Y
+  Y --> A
+  A --> R
   R -->|✅ Yes| A
-  R -->|❌ No| G[🕸️ Graph build and visualization]
+  R -->|❌ No| F
+  F --> G[🕸️ Graph]
   G --> M[🎧 MiniMax song generation]
 ```
 
 ### What this means for judges
 
 1. Users start in **Egg** to produce a run context from either generated or pasted conversation.
-2. **Yolk** extracts candidate facts with provenance and confidence.
-3. A transparent **Facts Board** forces an explanation-first review (why each fact exists, not just what it says).
-4. **Albumen** applies configurable pass rules (PII redaction, replacements, tone rewriting) and tracks per-pass diffs.
-5. The system writes run artifacts into a **knowledge graph** so every transformation is traceable.
-6. **Song generation** creates a factual lyric sheet and playable audio output from approved facts.
-7. The run can be inspected for traces, latency, and quality signals, with full run state available for review.
+2. **Context** and **Profile** feed into **Yolk**, which extracts candidate facts with provenance and confidence.
+3. **Albumen** applies configurable pass rules to sanitized facts.
+4. **Need another pass?** controls iteration until the team accepts **Final facts**.
+5. **Graph** renders final fact lineage and then flows into **Music** generation from the approved artifact.
 
 ## System architecture
 

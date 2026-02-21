@@ -41,11 +41,11 @@ function MessageLog({
   return (
     <CopilotFrame>
       <div className="section-head">
-        <h2>Discord Log Simulation</h2>
+        <h2>💬 Discord Log Simulation</h2>
         <div className="toggle-row">
           <span>{messages.length} messages</span>
-          <button onClick={onToggleRawJson} type="button">
-            {showRawJson ? 'Hide JSON' : 'Show JSON'}
+          <button onClick={onToggleRawJson} type="button" aria-label={showRawJson ? 'Hide JSON Data' : 'Show JSON Data'}>
+            {showRawJson ? '📦 Hide JSON' : '📥 Show JSON'}
           </button>
         </div>
       </div>
@@ -74,6 +74,7 @@ function FactPanel({
   onToggle,
   onEdit,
   onRun,
+  canRun,
   isBusy,
   defaultLimit,
 }: {
@@ -88,12 +89,12 @@ function FactPanel({
   return (
     <CopilotFrame>
       <div className="section-head">
-        <h2>Yolk Raw Facts</h2>
-        <button onClick={onRun} disabled={isBusy || !canRun}>
-          {isBusy ? 'Running...' : 'Run Yolk'}
+        <h2>🧩 Yolk Raw Facts</h2>
+        <button onClick={onRun} disabled={isBusy || !canRun} aria-label="Run Yolk">
+          {isBusy ? '⚡ Running...' : 'Run Yolk ✨'}
         </button>
       </div>
-      <p className="muted">{facts.length} fact(s) requested up to {defaultLimit}</p>
+      <p className="muted">Fact count target: {facts.length}/{defaultLimit}</p>
       <div className="fact-list">
         {facts.map((fact) => (
           <article className="fact" key={fact.id}>
@@ -123,7 +124,17 @@ function FactPanel({
   )
 }
 
-function GraphPanel({ graph }: { graph: GraphData | null }) {
+function GraphPanel({
+  graph,
+  onBuild,
+  canRun,
+  isBusy,
+}: {
+  graph: GraphData | null
+  onBuild: () => void
+  canRun: boolean
+  isBusy: boolean
+}) {
   const nodes = graph?.nodes ?? []
   const edges = graph?.edges ?? []
 
@@ -144,8 +155,10 @@ function GraphPanel({ graph }: { graph: GraphData | null }) {
   return (
     <CopilotFrame>
       <div className="section-head">
-        <h2>Knowledge Graph</h2>
-        <span>{nodes.length} nodes</span>
+        <h2>🕸️ Knowledge Graph</h2>
+        <button onClick={onBuild} disabled={isBusy || !canRun} aria-label="Build Graph">
+          {isBusy ? '⚙️ Running...' : 'Run Graph 🕸️'}
+        </button>
       </div>
       <div className="graph-wrap">
         <svg className="graph" viewBox="0 0 640 360" role="img" aria-label="Knowledge graph preview">
@@ -176,7 +189,7 @@ function GraphPanel({ graph }: { graph: GraphData | null }) {
           })}
         </svg>
       </div>
-      {!nodes.length && <p className="muted">Run Graph after processing stages.</p>}
+      {!nodes.length && <p className="muted">Run Graph to build a visual trace from transformed facts.</p>}
     </CopilotFrame>
   )
 }
@@ -199,24 +212,28 @@ function MusicPanel({
   return (
     <CopilotFrame>
       <div className="section-head">
-        <h2>Music Studio</h2>
-        <span>{songArtifact ? 'Ready' : 'Awaiting generation'}</span>
+        <h2>🎛️ Music Studio</h2>
+        <span>{songArtifact ? '🎧 Ready' : '🎵 Awaiting groove'}</span>
       </div>
       <div className="music-controls">
         <label>
-          Prompt
+          <span>🧠 Prompt</span>
           <textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} />
         </label>
         <label>
-          Mood
+          <span>🎭 Mood</span>
           <input value={mood} onChange={(event) => setMood(event.target.value)} />
         </label>
         <label className="toggle-row">
           <input type="checkbox" checked={mockOnly} onChange={(event) => setMockOnly(event.target.checked)} />
-          Mock mode only
+          <span>🎤 Mock mode only</span>
         </label>
-        <button onClick={() => onGenerate(prompt, mood, mockOnly)} disabled={disabled || inProgress}>
-          {inProgress ? 'Generating...' : 'Generate Song'}
+          <button
+            onClick={() => onGenerate(prompt, mood, mockOnly)}
+            disabled={disabled || inProgress}
+            aria-label="Generate Song"
+          >
+          {inProgress ? '🛠️ Generating...' : 'Generate Song 🎶'}
         </button>
       </div>
       {songArtifact && (
@@ -245,7 +262,7 @@ function TelemetryPanel({ events }: { events: TelemetryEvent[] }) {
   return (
     <CopilotFrame>
       <div className="section-head">
-        <h2>Debug Console</h2>
+        <h2>📡 Debug Console</h2>
         <span>{events.length} events</span>
       </div>
       <ul className="telemetry">
@@ -267,7 +284,7 @@ function LLMInsightsPanel({ notes }: { notes: LLMCallSummary[] }) {
   return (
     <CopilotFrame>
       <div className="section-head">
-        <h2>LLM Insights</h2>
+        <h2>🧠 LLM Neural Notes</h2>
         <span>{notes.length} entries</span>
       </div>
       <ul className="llm-notes">
@@ -511,20 +528,20 @@ export function App() {
       <main className="layout">
         <section className="controls">
           <CopilotFrame>
-            <h2>Input Plane</h2>
+            <h2>🎚️ Input Plane</h2>
             <label className="control-row">
-              <span>Input Source</span>
+              <span>🎛️ Input Source</span>
               <select value={mode} onChange={(event) => setMode(event.target.value as 'seeded' | 'paste')}>
                 <option value="seeded">Generate Fictional Discord Chat</option>
                 <option value="paste">Paste Transcript</option>
               </select>
             </label>
             <label className="control-row">
-              <span>Seed</span>
+              <span>🏷️ Seed</span>
               <input value={seed} onChange={(event) => setSeed(event.target.value)} />
             </label>
             <label className="control-row">
-              <span>Message Count</span>
+              <span>🔁 Message Count</span>
               <input
                 type="range"
                 min={8}
@@ -535,7 +552,7 @@ export function App() {
               <strong>{messageCount}</strong>
             </label>
             <label className="control-row">
-              <span>Yolk Fact Count</span>
+              <span>🔢 Yolk Fact Count</span>
               <input
                 type="number"
                 min={1}
@@ -549,7 +566,7 @@ export function App() {
             </label>
             {mode === 'paste' && (
               <label className="control-row">
-                <span>Transcript</span>
+                <span>📝 Transcript</span>
                 <textarea value={transcript} onChange={(event) => setTranscript(event.target.value)} />
               </label>
             )}
@@ -567,11 +584,17 @@ export function App() {
 
           <CopilotFrame>
             <div className="section-head">
-              <h2>Albumen Rule Builder</h2>
-              <span>stackable pass</span>
+              <h2>🧪 Albumen Rule Builder</h2>
+              <button
+                onClick={applyAlbumen}
+                disabled={isBusy || !runId}
+                aria-label="Run Albumen Pass"
+              >
+                Run Albumen Pass 🧪
+              </button>
             </div>
             <label className="control-row">
-              <span>Action</span>
+              <span>⚙️ Action</span>
               <select value={ruleAction} onChange={(event) => setRuleAction(event.target.value as 'replace' | 'pii_remove' | 'rewrite_tone')}>
                 <option value="replace">find-replace</option>
                 <option value="pii_remove">PII remove</option>
@@ -579,28 +602,22 @@ export function App() {
               </select>
             </label>
             <label className="control-row">
-              <span>Find</span>
+              <span>🕵️ Find</span>
               <input value={ruleFind} onChange={(event) => setRuleFind(event.target.value)} />
             </label>
             <label className="control-row">
-              <span>Replace</span>
+              <span>🔁 Replace</span>
               <input value={ruleReplace} onChange={(event) => setRuleReplace(event.target.value)} />
             </label>
             <div className="button-row">
-              <button onClick={applyAlbumen} disabled={isBusy || !runId}>
-                Run Albumen Pass
-              </button>
-              <button onClick={buildGraph} disabled={isBusy || !runId}>
-                Build Graph
-              </button>
-              <button onClick={exportBundle} disabled={!runId}>
-                Export Run Bundle
+              <button onClick={exportBundle} disabled={!runId} aria-label="Export Run Bundle">
+                Export Run Bundle 📦
               </button>
             </div>
           </CopilotFrame>
 
           {message && <p className="status-banner">{message}</p>}
-          <GraphPanel graph={graph} />
+          <GraphPanel graph={graph} onBuild={buildGraph} canRun={Boolean(runId)} isBusy={isBusy} />
           <MusicPanel songArtifact={songArtifact} onGenerate={generateSong} inProgress={isBusy} disabled={!runId} />
           <TelemetryPanel events={telemetry} />
       </section>
@@ -612,11 +629,11 @@ export function App() {
             showRawJson={showRawJson}
             onToggleRawJson={() => setShowRawJson((current) => !current)}
           />
-          <CopilotFrame>
-            <div className="section-head">
-              <h2>Pass Ledger</h2>
-              <span>{passes.length} pass(es)</span>
-            </div>
+            <CopilotFrame>
+              <div className="section-head">
+                <h2>🧾 Pass Ledger</h2>
+                <span>{passes.length} pass(es)</span>
+              </div>
             <ul className="pass-list">
               {passes.map((pass) => (
                 <li key={pass.id}>
@@ -628,7 +645,7 @@ export function App() {
             </ul>
           </CopilotFrame>
           <CopilotFrame>
-            <h2>Run Snapshot</h2>
+            <h2>🧬 Run Snapshot</h2>
             <pre>{runId ? JSON.stringify({ runId, stage: runState?.stage || 'idle', traceId: runState?.traceId || 'pending', errors: runState?.errors || [] }, null, 2) : 'No active run'}</pre>
           </CopilotFrame>
         </section>
