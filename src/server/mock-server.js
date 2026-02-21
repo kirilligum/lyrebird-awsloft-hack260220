@@ -576,7 +576,7 @@ function buildDemoSongArtifact(run, packConfig, exportPayload, responsePayload, 
     audioProvider: 'minimax',
     createdAt: Date.now(),
     providerMeta: {
-      host,
+      host: MINIMAX_API_HOST,
       source: musicVariant?.exportFile || packConfig.minimaxExport,
       remoteAudio,
       rawModel: exportPayload?.model || 'music-2.5',

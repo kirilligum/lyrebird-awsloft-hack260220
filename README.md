@@ -170,6 +170,27 @@ CopilotKit patterns shape the entire user-facing experience:
 - Fact review and transform controls as structured UI components
 - Clear human-in-the-loop feedback loops over extracted and transformed content
 
+### Example Copilot assistant prompts
+
+Use these prompts in the Copilot sidebar (`CopilotSidebar`) during demo:
+
+- `What stage is the current run in, and did anything fail?`
+- `Summarize the current facts and flag low-confidence or risky items.`
+- `Which source messages support each approved fact?`
+- `Did we run Albumen yet, and what changed in the last pass?`
+- `Show me the graph lineage for the selected run and identify any disconnected nodes.`
+- `Suggest a safe find/replace rule to de-identify names and emails.`
+- `Why is music generation blocked right now, and what is the next action?`
+- `Debug the current run: list blockers, latency, and likely fix path.`
+- `Give me a judge-ready one-paragraph run summary.`
+- `Compare this run with the previous version and list the deltas.`
+
+Quick templates:
+
+- `Help me debug run <RUN_ID>.`
+- `Audit the last albumen pass: what changed and why.`
+- `Prepare a short explanation for non-technical judges.`
+
 ## Placeholder inventory and integration notes
 
 These are the active placeholder strings in the current code and how to integrate them:

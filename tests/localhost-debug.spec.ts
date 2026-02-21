@@ -4,6 +4,8 @@ import fs from 'fs'
 test('localhost lyrebird debug render + flow', async ({ page }) => {
   page.setDefaultTimeout(120000)
   const events: string[] = []
+  const trackPath = 'music_prod_tts-20260221103606-udrEprgbjcAeqNKa.mp3'
+  const trackResponses: number[] = []
 
   page.on('console', (msg) => {
     events.push(`[${msg.type()}] ${msg.text()}`)
@@ -15,6 +17,11 @@ test('localhost lyrebird debug render + flow', async ({ page }) => {
 
   page.on('requestfailed', (req) => {
     events.push(`[requestfailed] ${req.method()} ${req.url()} - ${req.failure()?.errorText || 'unknown'}`)
+  })
+  page.on('response', (response) => {
+    if (response.url().includes(trackPath)) {
+      trackResponses.push(response.status())
+    }
   })
 
   await page.goto('/', { waitUntil: 'networkidle' })
@@ -41,6 +48,18 @@ test('localhost lyrebird debug render + flow', async ({ page }) => {
     'src',
     /music_prod_tts-20260221103606-udrEprgbjcAeqNKa\.mp3/,
   )
+  await expect.poll(() => trackResponses.length).toBeGreaterThan(0)
+  expect([200, 206]).toContain(trackResponses.at(-1))
+  const audioState = await page.locator('.copilot-card:has(button[aria-label="Load Song Placeholder"]) audio').evaluate((audio) => new Promise((resolve) => {
+    const element = audio as HTMLAudioElement
+    if (element.readyState >= 1) return resolve({ readyState: element.readyState, error: element.error ? String(element.error.message || element.error.code) : null })
+    const settle = () => resolve({ readyState: element.readyState, error: element.error ? String(element.error.message || element.error.code) : null })
+    element.addEventListener('loadedmetadata', settle, { once: true })
+    element.addEventListener('error', settle, { once: true })
+    setTimeout(() => settle(), 5000)
+  }))
+  expect(audioState.readyState).toBeGreaterThan(0)
+  expect(audioState).toHaveProperty('error')
 
   await expect(page.locator('audio')).toBeVisible({ timeout: 30000 })
   await page.screenshot({ path: 'test-results/manual/02-flow-complete.png', fullPage: true })
