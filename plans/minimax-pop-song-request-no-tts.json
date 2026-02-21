@@ -1,0 +1,12 @@
+{
+  "model": "music-2.5",
+  "prompt": "Create a polished pop song arrangement with clear drums, bass, synths, and polished production. Do not use text-to-speech vocals. Produce an instrumental pop track. Use the provided source facts only as internal inspiration for rhythm and emotion, not as lyrics. Keep it energetic, radio-friendly, and fully musical.",
+  "lyrics": "[Instrumental]\nNo lead vocals. No rap or spoken narration.\nFacts to inspire the composition:\n1) The organizers posted a full prize breakdown for AWS, Datadog, Neo4j, MiniMax, and TestSprite tracks.\n2) Some participants had private marketplace and IAM permission failures when attempting Bedrock access during setup.\n3) Team members requested a direct AWS support contact and asked if a designated technical support channel existed.\n4) Bedrock inference worked while deploying services like EC2 often failed under permissions.\n5) Lenka confirmed participants should submit a GitHub link, demo video, track selections, and product answers.\n6) AWS (amazing) and CopilotKit (amazing) were noted as updated prize tracks.\n[Instrumental_End]",
+  "stream": false,
+  "output_format": "url",
+  "audio_setting": {
+    "sample_rate": 44100,
+    "bitrate": 256000,
+    "format": "mp3"
+  }
+}

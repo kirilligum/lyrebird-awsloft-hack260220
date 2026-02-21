@@ -1,0 +1,37 @@
+{
+  "runId": "discord-chat-hackathon-aws-lof",
+  "provider": "minimax",
+  "endpoint": "https://api.minimax.io/v1/music_generation",
+  "model": "music-2.5",
+  "style": "dark techno",
+  "factsUsed": [
+    "fact-001#v1",
+    "fact-002#v1",
+    "fact-003#v1",
+    "fact-004#v1",
+    "fact-007#v1",
+    "fact-001#v2",
+    "fact-006#v2"
+  ],
+  "requestFile": "plans/minimax-dark-techno-lyrics-request-final-7facts.json",
+  "responseFile": "plans/minimax-dark-techno-response.json",
+  "calledAt": "2026-02-21T02:19:24Z",
+  "response": {
+    "audio": "https://minimax-algeng-chat-tts-us.oss-us-east-1.aliyuncs.com/music%2Fprod%2Ftts-20260221101918-ihhDcmZuhpkdUBOT.mp3?Expires=1771726764&OSSAccessKeyId=LTAI5tCpJNKCf5EkQHSuL9xg&Signature=OnCmK%2FGF2O7viKsvPDZkbYvGEfs%3D",
+    "status": 2,
+    "trace_id": "05e848e650643ae58c1b70221e422552",
+    "analysis_info": null,
+    "extra_info": {
+      "music_duration": 60186,
+      "music_sample_rate": 44100,
+      "music_channel": 2,
+      "bitrate": 256000,
+      "music_size": 1929904
+    },
+    "base_resp": {
+      "status_code": 0,
+      "status_msg": "success"
+    }
+  },
+  "httpHeadersFile": "plans/minimax-dark-techno-response-headers.txt"
+}

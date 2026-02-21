@@ -13,9 +13,12 @@ const MINIMAX_MOCK_ONLY = process.env.MINIMAX_MOCK_ONLY === 'true' || process.en
 const MINIMAX_REQUEST_TIMEOUT_MS = Number(process.env.MINIMAX_REQUEST_TIMEOUT_MS || '12000')
 const DEFAULT_MOCK_TOKEN = 'mock'
 const DISCORD_FIXTURE_PATH = path.resolve(process.cwd(), 'src', 'data', 'simulated-discord-log.json')
+const DEMO_PLANS_DIR = path.resolve(process.cwd(), 'plans')
+const DEMO_PLAN_ARTIFACTS_DIR = path.resolve(DEMO_PLANS_DIR, 'artifacts')
 const MAX_SIMULATED_MESSAGES = 360
 const DEFAULT_YOLK_FACT_LIMIT = 5
 const MAX_YOLK_FACT_LIMIT = 20
+const MUSIC_PLACEHOLDER_TRACK_FILE = 'music_prod_tts-20260221103606-udrEprgbjcAeqNKa.mp3'
 
 let discordFixtureCache = null
 
@@ -69,6 +72,183 @@ const MODEL_BY_TASK = {
   albumen_summary: 'mock-llm-transformer-1',
 }
 
+const MUSIC_VARIANT_IDS = {
+  POP_WITH_LYRICS: 'pop-with-lyrics',
+  DARK_TECHNO_7_FACTS: 'dark-techno-7facts',
+  DARK_TECHNO: 'dark-techno',
+  INSTRUMENTAL: 'pop-instrumental',
+  NO_TTS: 'pop-no-tts',
+}
+
+const DEMO_PACKS = {
+  'discord-chat-hackathon-aws-lof': {
+    id: 'discord-chat-hackathon-aws-lof',
+    messages: 'discord-chat-hackathon-aws-lof.json',
+    rawFacts: 'discord-chat-hackathon-aws-lof-facts.json',
+    findFacts: 'discord-chat-hackathon-aws-lof-find-facts.json',
+    replaceFacts: 'discord-chat-hackathon-aws-lof-replace-facts.json',
+    finalGraphMusic: 'discord-chat-hackathon-aws-lof-final-graph-music.json',
+    minimaxRequest: 'minimax-pop-song-with-lyrics-request.json',
+    minimaxResponse: 'minimax-pop-song-with-lyrics-response.json',
+    minimaxCallArtifact: 'minimax-pop-song-with-lyrics-call-artifact.json',
+    minimaxExport: 'minimax-pop-song-with-lyrics-export.json',
+    localArtifact: 'artifacts/minimax-pop-song-with-lyrics.mp3',
+    placeholderMusicArtifact: `artifacts/${MUSIC_PLACEHOLDER_TRACK_FILE}`,
+    placeholderFiles: [
+      'discord-chat-hackathon-aws-lof.json',
+      'discord-chat-hackathon-aws-lof-facts.json',
+      'discord-chat-hackathon-aws-lof-find-facts.json',
+      'discord-chat-hackathon-aws-lof-replace-facts.json',
+      'discord-chat-hackathon-aws-lof-final-graph-music.json',
+      'minimax-dark-techno-response.json',
+      'minimax-dark-techno-lyrics-call-summary.json',
+      'minimax-pop-song-with-lyrics-request.json',
+      'minimax-pop-song-with-lyrics-response.json',
+      'minimax-pop-song-with-lyrics-response-headers.txt',
+      'minimax-pop-song-with-lyrics-call-artifact.json',
+      'minimax-pop-song-with-lyrics-export.json',
+      'minimax-dark-techno-lyrics-request-final-7facts.json',
+      'minimax-dark-techno-lyrics-request.json',
+      'minimax-dark-techno-lyrics-response.json',
+      'minimax-dark-techno-response-headers.txt',
+      'minimax-dark-techno-call-artifact.json',
+      'minimax-pop-song-request-no-tts.json',
+      'minimax-pop-song-request-instrumental.json',
+      'minimax-pop-song-instrumental-response.json',
+      'minimax-pop-song-instrumental-response-headers.txt',
+      'minimax-pop-instrumental-call-artifact.json',
+      'minimax-pop-song-response.json',
+      'minimax-pop-song-response-headers.txt',
+      'front-end-music-iteration-plan.md',
+      'artifacts/minimax-pop-song-with-lyrics.mp3',
+      `artifacts/${MUSIC_PLACEHOLDER_TRACK_FILE}`,
+    ],
+    musicVariants: {
+      [MUSIC_VARIANT_IDS.POP_WITH_LYRICS]: {
+        id: MUSIC_VARIANT_IDS.POP_WITH_LYRICS,
+        label: 'Pop with lyrics',
+        requestFile: 'minimax-pop-song-with-lyrics-request.json',
+        responseFile: 'minimax-pop-song-with-lyrics-response.json',
+        responseHeadersFile: 'minimax-pop-song-with-lyrics-response-headers.txt',
+        callArtifactFile: 'minimax-pop-song-with-lyrics-call-artifact.json',
+        exportFile: 'minimax-pop-song-with-lyrics-export.json',
+      },
+      [MUSIC_VARIANT_IDS.DARK_TECHNO_7_FACTS]: {
+        id: MUSIC_VARIANT_IDS.DARK_TECHNO_7_FACTS,
+        label: 'Dark techno (7-fact lyrics)',
+        requestFile: 'minimax-dark-techno-lyrics-request-final-7facts.json',
+        responseFile: 'minimax-dark-techno-response.json',
+        responseHeadersFile: 'minimax-dark-techno-response-headers.txt',
+        callArtifactFile: 'minimax-dark-techno-call-artifact.json',
+      },
+      [MUSIC_VARIANT_IDS.DARK_TECHNO]: {
+        id: MUSIC_VARIANT_IDS.DARK_TECHNO,
+        label: 'Dark techno',
+        requestFile: 'minimax-dark-techno-lyrics-request.json',
+        responseFile: 'minimax-dark-techno-response.json',
+        responseHeadersFile: 'minimax-dark-techno-response-headers.txt',
+        callArtifactFile: 'minimax-dark-techno-call-artifact.json',
+      },
+      [MUSIC_VARIANT_IDS.INSTRUMENTAL]: {
+        id: MUSIC_VARIANT_IDS.INSTRUMENTAL,
+        label: 'Pop instrumental',
+        requestFile: 'minimax-pop-song-request-instrumental.json',
+        responseFile: 'minimax-pop-song-instrumental-response.json',
+        responseHeadersFile: 'minimax-pop-song-instrumental-response-headers.txt',
+        callArtifactFile: 'minimax-pop-instrumental-call-artifact.json',
+      },
+      [MUSIC_VARIANT_IDS.NO_TTS]: {
+        id: MUSIC_VARIANT_IDS.NO_TTS,
+        label: 'Pop no TTS',
+        requestFile: 'minimax-pop-song-request-no-tts.json',
+        responseFile: 'minimax-pop-song-response.json',
+        responseHeadersFile: 'minimax-pop-song-response-headers.txt',
+      },
+    },
+  },
+}
+
+function readJsonPlanFile(filePath) {
+  try {
+    const raw = fs.readFileSync(path.join(DEMO_PLANS_DIR, filePath), 'utf8')
+    const parsed = JSON.parse(raw)
+    return parsed
+  } catch (error) {
+    console.error(`Unable to read demo pack file ${filePath}:`, error.message)
+    return null
+  }
+}
+
+function isSupportedPack(packId) {
+  return Boolean(DEMO_PACKS[packId] && Number.isInteger(Object.keys(DEMO_PACKS[packId]).length))
+}
+
+function readTextPlanFile(filePath) {
+  try {
+    return fs.readFileSync(path.join(DEMO_PLANS_DIR, filePath), 'utf8')
+  } catch (error) {
+    console.error(`Unable to read placeholder text file ${filePath}:`, error.message)
+    return null
+  }
+}
+
+function resolvePlanArtifact(fileName) {
+  if (!/^[A-Za-z0-9._-]+\.mp3$/i.test(fileName)) {
+    return null
+  }
+  return path.join(DEMO_PLAN_ARTIFACTS_DIR, fileName)
+}
+
+function normalizePackMessages(messages = []) {
+  return messages
+    .filter((message) => message && typeof message === 'object')
+    .map((message, index) => ({
+      id: String(message.id || `pack-msg-${index + 1}`),
+      author: String(message.author || 'speaker').trim(),
+      timestamp: message.timestamp ? toISO(Date.parse(message.timestamp)) : toISO(Date.now()),
+      content: String(message.content || '').trim(),
+      channel: String(message.channel || 'discord').trim(),
+      threadId: String(message.threadId || `discord-chat-hackathon-aws-lof-thread-${index + 1}`).trim(),
+      isSynthetic: message.isSynthetic !== false,
+    }))
+}
+
+function normalizePackFacts(facts = []) {
+  return facts
+    .filter((fact) => fact && typeof fact === 'object' && String(fact.text || '').trim())
+    .map((fact) => {
+      const base = {
+        id: String(fact.id || crypto.randomUUID()),
+        text: String(fact.text).trim(),
+        confidence: Number(fact.confidence ?? 0.93),
+        provenance: {
+          runId: String(fact.provenance?.runId || ''),
+          sourceMessageIds: Array.isArray(fact.provenance?.sourceMessageIds)
+            ? fact.provenance.sourceMessageIds.slice(0, 8)
+            : [],
+          excerpts: Array.isArray(fact.provenance?.excerpts) ? fact.provenance.excerpts : [],
+          passVersion: Number(fact.provenance?.passVersion || 1),
+        },
+        status: fact.status || 'pending',
+        version: Number(fact.version || 1),
+        rationale: String(fact.rationale || 'Loaded from curated placeholder pack.'),
+      }
+
+      if (fact.appliedDiffs) {
+        base.appliedDiffs = Array.isArray(fact.appliedDiffs)
+          ? fact.appliedDiffs
+              .filter((diff) => diff && typeof diff === 'object')
+              .map((diff) => ({
+                before: String(diff.before || ''),
+                after: String(diff.after || ''),
+              }))
+          : []
+      }
+
+      return base
+    })
+}
+
 function clampText(value = '', limit = 2560) {
   return String(value || '').slice(0, limit)
 }
@@ -90,6 +270,66 @@ function makeRng(seed = '') {
     state ^= state << 5
     return (state >>> 0) / 4294967296
   }
+}
+
+function normalizePlaceholderFindResults(items = []) {
+  if (!Array.isArray(items)) {
+    return []
+  }
+
+  return items
+    .filter((item) => item && typeof item === 'object')
+    .map((item, index) => {
+      const normalizedText = String(item.text || '').trim()
+      const factId = String(item.factId || item.id || `placeholder-find-${index + 1}`)
+      const sourceMessageIds = Array.isArray(item.sourceMessageIds) ? item.sourceMessageIds.slice(0, 6) : []
+      return {
+        id: factId,
+        text: normalizedText || 'Matched factual snippet.',
+        confidence: 0.99,
+        provenance: {
+          runId: String(item.runId || 'demo-pack-placeholder'),
+          sourceMessageIds,
+          passVersion: 1,
+        },
+        status: 'pending',
+        version: 1,
+        rationale:
+          String(item.rationale || item.source || 'Placeholder fact from curated sponsor find output.'),
+      }
+    })
+}
+
+function normalizePlaceholderReplaceResults(items = []) {
+  if (!Array.isArray(items)) {
+    return []
+  }
+
+  return items
+    .filter((item) => item && typeof item === 'object')
+    .map((item, index) => {
+      const sourceText = String(item.before || item.text || item.find || '').trim()
+      const resultText = String(item.result || item.after || '').trim()
+      const factId = String(item.factId || item.id || `placeholder-replace-${index + 1}`)
+      const sourceMessageIds = Array.isArray(item.sourceMessageIds) ? item.sourceMessageIds.slice(0, 6) : []
+      return {
+        id: factId,
+        text: resultText || `Updated fact from placeholder replace output ${index + 1}.`,
+        confidence: 0.99,
+        provenance: {
+          runId: String(item.runId || 'demo-pack-placeholder'),
+          sourceMessageIds,
+          passVersion: 2,
+        },
+        status: 'pending',
+        version: 2,
+        rationale:
+          String(
+            item.rationale
+              || `Placeholder replace output from curated run. Before: ${sourceText}. Replace: ${String(item.replace || 'n/a')}`,
+          ),
+      }
+    })
 }
 
 function pick(list, rng) {
@@ -154,6 +394,36 @@ function toFixtureTimestamp(rawTimestamp, fallbackSeed, fallbackIndex) {
   return toISO(Date.now() - (fallbackIndex + 1) * 42000 - Math.floor(seeded() * 12000))
 }
 
+function ensureSponsorFactSeed(messages, seed, targetCount) {
+  const current = Array.isArray(messages) ? [...messages] : []
+  const hasSponsor = current.some((message) => /sponsors?/i.test(message?.content || ''))
+  if (hasSponsor) {
+    return current
+  }
+
+  const rng = makeRng(`${seed}-sponsor-inject`)
+  const author = pick(authors, rng)
+  const channel = pick(channels, rng)
+  const minutes = Math.floor(rng() * 20)
+  const sponsorMessage = {
+    id: crypto.randomUUID(),
+    author,
+    timestamp: toISO(Date.now() - (current.length + 1) * 42000 - Math.floor(rng() * 12000)),
+    content: `${author.toLowerCase()} coordinated sponsor onboarding after ${minutes} minutes.`,
+    channel,
+    threadId: `${slugify(author)}-${slugify(seed)}-sponsor-${current.length + 1}`,
+    isSynthetic: true,
+  }
+
+  const withSponsor = current.concat(sponsorMessage)
+  if (withSponsor.length > targetCount) {
+    withSponsor[targetCount - 1] = sponsorMessage
+    return withSponsor.slice(0, targetCount)
+  }
+
+  return withSponsor
+}
+
 function buildDiscordMessagesFromSeed(seed, messageCount) {
   const count = parseIntSafe(messageCount, 24, 1, MAX_SIMULATED_MESSAGES)
   const rawMessages = getFixtureMessages(seed)
@@ -186,10 +456,10 @@ function buildDiscordMessagesFromSeed(seed, messageCount) {
 
   if (fixtureMessages.length < count) {
     const fill = generateSimulatedDiscord(`${seed}-fixture`, count - fixtureMessages.length)
-    return fixtureMessages.concat(fill)
+    return ensureSponsorFactSeed(fixtureMessages.concat(fill), seed, count)
   }
 
-  return fixtureMessages
+  return ensureSponsorFactSeed(fixtureMessages, seed, count)
 }
 
 function createRunRecord(runId, payload) {
@@ -272,6 +542,203 @@ function parseIntSafe(value, fallback, min, max) {
   if (!Number.isFinite(parsed) || Number.isNaN(parsed)) return fallback
   const clamped = Math.max(min, Math.min(max, parsed))
   return Math.floor(clamped)
+}
+
+function inferDemoMusicMood(prompt) {
+  const normalized = String(prompt || '').toLowerCase()
+  if (normalized.includes('dark techno') || normalized.includes('techno')) {
+    return 'dark techno'
+  }
+  if (normalized.includes('instrumental')) {
+    return 'instrumental'
+  }
+  return 'playful'
+}
+
+function buildDemoSongArtifact(run, packConfig, exportPayload, responsePayload, packId, musicVariant) {
+  const localTrackUrl = `/api/packs/${packId}/artifacts/minimax-pop-song-with-lyrics.mp3`
+  const remoteAudio = responsePayload?.data?.audio || exportPayload?.tracks?.remote?.audio || null
+  const durationMs = Number(
+    responsePayload?.extra_info?.music_duration
+    || exportPayload?.tracks?.remote?.extraInfo?.musicDurationMs
+    || 66115,
+  )
+  const prompt = String(exportPayload?.prompt || responsePayload?.prompt || '')
+  const style = String(exportPayload?.style || 'pop with vocals')
+  const lyrics = String(exportPayload?.lyrics || '')
+  return {
+    id: crypto.randomUUID(),
+    runId: run.id,
+    trackUrl: localTrackUrl,
+    format: 'audio/mpeg',
+    durationMs,
+    waveformSummary: ['minimax-demo', 'placeholder-artifact'],
+    audioProvider: 'minimax',
+    createdAt: Date.now(),
+    providerMeta: {
+      host,
+      source: musicVariant?.exportFile || packConfig.minimaxExport,
+      remoteAudio,
+      rawModel: exportPayload?.model || 'music-2.5',
+      lyricSource: lyrics ? 'plan_lyrics' : 'prompt',
+    },
+    lyrics: lyrics || null,
+    style,
+    mood: inferDemoMusicMood(prompt),
+  }
+}
+
+function pickMusicVariant(packConfig, requestedVariant) {
+  const requested = packConfig.musicVariants?.[requestedVariant]
+  if (requested) {
+    return {
+      id: requested.id,
+      ...requested,
+    }
+  }
+
+  return {
+    id: MUSIC_VARIANT_IDS.POP_WITH_LYRICS,
+    ...packConfig.musicVariants[MUSIC_VARIANT_IDS.POP_WITH_LYRICS],
+  }
+}
+
+function buildDemoPackRun(packId, options = {}) {
+  if (!isSupportedPack(packId)) {
+    return null
+  }
+
+  const packConfig = DEMO_PACKS[packId]
+  const selectedVariant = pickMusicVariant(packConfig, options.musicVariant)
+  const messagePack = readJsonPlanFile(packConfig.messages)
+  const factsPack = readJsonPlanFile(packConfig.rawFacts)
+  const findPack = readJsonPlanFile(packConfig.findFacts)
+  const replacePack = readJsonPlanFile(packConfig.replaceFacts)
+  const finalPack = readJsonPlanFile(packConfig.finalGraphMusic)
+  const minimaxRequest = readJsonPlanFile(selectedVariant.requestFile)
+  const minimaxResponse = readJsonPlanFile(selectedVariant.responseFile)
+  const minimaxExport = readJsonPlanFile(selectedVariant.exportFile)
+
+  if (!messagePack || !factsPack) {
+    return null
+  }
+
+  const runId = `${packId}-${Date.now()}`
+  const messages = normalizePackMessages(messagePack.messages || [])
+  const rawFacts = normalizePackFacts(factsPack.facts || [])
+  const seededFacts = rawFacts.slice(0, MAX_YOLK_FACT_LIMIT).map((fact, index) => ({
+    ...fact,
+    id: fact.id || `fact-${index + 1}`,
+    provenance: {
+      ...fact.provenance,
+      runId,
+    },
+    status: fact.status || 'pending',
+    version: fact.version || 1,
+  }))
+  const run = createRunRecord(runId, {
+    mode: 'seeded',
+    seed: packId,
+    profile: `AWS Hackathon Presenter — CEO ${factsPack.source === 'plans/discord-chat-hackathon-aws-lof.json' ? 'Desk Team' : 'Event Lead'}`,
+    messageCount: messages.length,
+    transcript: '',
+    promptHint: `Demo pack loaded from ${packId}`,
+  })
+
+  const resolvedMood = inferDemoMusicMood(minimaxRequest?.prompt || '')
+  const resolvedPrompt = String(minimaxRequest?.prompt || 'Create a judge-ready pop track from extracted facts.')
+  run.traceId = minimaxExport?.runId || minimaxRequest?.requestId || crypto.randomUUID()
+  run.messages = messages
+  run.options.mode = 'seeded'
+  run.options.seed = packId
+  run.options.profile = `AWS Hackathon Presenter — event narrative deck (pack: ${packId})`
+  run.options.promptHint = `Demo pack loaded from ${packConfig.id}`
+  run.options.includeTranscript = Boolean(messages.length)
+
+  run.yolkFacts = seededFacts
+  run.stage = 'yolk'
+  run.version = 1
+  run.updatedAt = Date.now()
+  run.graph = buildRunGraph(run)
+  run.songArtifact = buildDemoSongArtifact(run, packConfig, minimaxExport, minimaxResponse, packId, selectedVariant)
+  run.albumenPasses = []
+  run.llmNotes.unshift({
+    task: 'demo_pack_load',
+    model: 'mock-pipeline-loader',
+    stage: 'egg',
+    confidence: 0.99,
+    rationale: 'Loaded pre-generated Hackathon placeholder data bundle for deterministic investor demo.',
+    payloadPreview: `pack=${packId} source=${factsPack.id || packConfig.id}`,
+    suggestions: ['Use this run as a deterministic baseline for judge demos.'],
+    metadata: {
+      source: 'demo-pack',
+      latencyMs: 0,
+      runId,
+      traceId: run.traceId,
+    },
+    createdAt: timestamp(),
+  })
+
+  const passSeeds = {
+    findSeed: Array.isArray(findPack?.items) && findPack.items[0] ? String(findPack.items[0].find || 'sponsor') : 'sponsor',
+    replaceSeed:
+      replacePack?.replaceInstructionPlaceholder
+      || "add 'amazing' to each sponsor name",
+  }
+  const findPlaceholderOutputs = normalizePlaceholderFindResults(findPack?.items)
+  const replacePlaceholderOutputs = normalizePlaceholderReplaceResults(replacePack?.items)
+
+  return {
+    run,
+    runState: {
+      id: run.id,
+      stage: run.stage,
+      version: run.version,
+      traceId: run.traceId,
+      updatedAt: timestamp(),
+      errors: [],
+    },
+    messages,
+    facts: run.yolkFacts,
+    passes: run.albumenPasses,
+    graph: run.graph,
+    songArtifact: run.songArtifact,
+    llmNotes: run.llmNotes,
+    placeholders: {
+      selectedMusicVariant: selectedVariant.id,
+      variantList: Object.values(packConfig.musicVariants).map((variant) => ({
+        id: variant.id,
+        label: variant.label,
+        requestFile: variant.requestFile,
+        responseFile: variant.responseFile,
+        responseHeadersFile: variant.responseHeadersFile,
+        callArtifactFile: variant.callArtifactFile,
+        exportFile: variant.exportFile,
+      })),
+      placeholderFiles: packConfig.placeholderFiles,
+      rawFactsPath: packConfig.rawFacts,
+      findFactsPath: packConfig.findFacts,
+      replaceFactsPath: packConfig.replaceFacts,
+      finalGraphMusicPath: packConfig.finalGraphMusic,
+      musicPlaceholderTrackUrl: `/api/plans/artifacts/${String(packConfig.placeholderMusicArtifact || `artifacts/${MUSIC_PLACEHOLDER_TRACK_FILE}`).replace(
+        /^artifacts\//,
+        '',
+      )}`,
+      minimaxRequestPath: selectedVariant.requestFile,
+      minimaxResponsePath: selectedVariant.responseFile,
+      minimaxCallArtifactPath: selectedVariant.callArtifactFile,
+      minimaxExportPath: selectedVariant.exportFile || null,
+      minimaxResponseHeadersPath: selectedVariant.responseHeadersFile,
+      placeholderFindOutputs: findPlaceholderOutputs,
+      placeholderReplaceOutputs: replacePlaceholderOutputs,
+      findSeed: passSeeds.findSeed,
+      replaceSeed: passSeeds.replaceSeed,
+      musicPrompt: resolvedPrompt,
+      musicMood: resolvedMood,
+      responseHeadersAvailable: Boolean(selectedVariant.responseHeadersFile),
+    },
+    finalBundle: finalPack || null,
+  }
 }
 
 function generateSimulatedDiscord(seed = 'demo', messageCount = 24) {
@@ -679,35 +1146,35 @@ function applyAlbumenPasses(run, passRules = []) {
 function buildRunGraph(run) {
   const nodes = []
   const edges = []
+  const factNodes = (Array.isArray(run.yolkFacts) ? run.yolkFacts : []).slice(0, 5)
 
-  nodes.push({ id: `run:${run.id}`, label: `Run ${run.id.slice(0, 8)}`, type: 'run', stage: run.stage, createdAt: timestamp() })
+  const profileLabel = clampText(
+    `Profile: ${run.options?.profile || 'No profile provided.'}`,
+    60,
+  )
+  const contextSource = run.options?.transcript
+    ? run.options.transcript
+    : run.options?.promptHint
+      ? run.options.promptHint
+      : run.messageSeed || 'seeded run context'
+  const contextLabel = clampText(`Context: ${contextSource}`, 100)
+  const profileNodeId = `profile:${run.id}`
+  const contextNodeId = `context:${run.id}`
 
-  run.messages.forEach((message) => {
-    nodes.push({ id: `msg:${message.id}`, label: `${message.author}: ${message.content.slice(0, 18)}`, type: 'message', channel: message.channel })
-    edges.push({ from: `run:${run.id}`, to: `msg:${message.id}`, relation: 'has_message' })
+  nodes.push({ id: profileNodeId, label: profileLabel, type: 'profile', category: 'input', source: 'run.profile' })
+  nodes.push({
+    id: contextNodeId,
+    label: contextLabel,
+    type: 'context',
+    category: 'input',
+    source: run.options?.includeTranscript ? 'transcript' : 'promptHint',
   })
+  edges.push({ from: profileNodeId, to: contextNodeId, relation: 'provides_context' })
 
-  run.yolkFacts.forEach((fact, index) => {
+  factNodes.forEach((fact, index) => {
     nodes.push({ id: `fact:${fact.id}`, label: `Fact ${index + 1}`, type: 'fact', status: fact.status, confidence: fact.confidence })
-    edges.push({ from: `run:${run.id}`, to: `fact:${fact.id}`, relation: 'derived_fact' })
-    if (fact.provenance?.sourceMessageIds?.length) {
-      fact.provenance.sourceMessageIds.slice(0, 2).forEach((msgId) => {
-        edges.push({ from: `fact:${fact.id}`, to: `msg:${msgId}`, relation: 'explained_by' })
-      })
-    }
+    edges.push({ from: contextNodeId, to: `fact:${fact.id}`, relation: 'derived_from_context' })
   })
-
-  run.albumenPasses.forEach((pass) => {
-    const passNode = `pass:${pass.id}`
-    nodes.push({ id: passNode, label: `Pass ${pass.version}`, type: 'pass', touchedCount: pass.touchedCount })
-    edges.push({ from: `run:${run.id}`, to: passNode, relation: 'albumen_pass' })
-  })
-
-  if (run.songArtifact) {
-    const artifactId = `song:${run.songArtifact.id}`
-    nodes.push({ id: artifactId, label: 'Music Artifact', type: 'song', provider: run.songArtifact.audioProvider, durationMs: run.songArtifact.durationMs })
-    edges.push({ from: `run:${run.id}`, to: artifactId, relation: 'produced' })
-  }
 
   return { nodes, edges }
 }
@@ -942,6 +1409,84 @@ app.get('/api/simulated-discord/log', (req, res) => {
       updatedAt: timestamp(),
     },
   })
+})
+
+app.get('/api/packs', (_req, res) => {
+  res.json({
+    packs: Object.keys(DEMO_PACKS).map((packId) => ({
+      id: packId,
+      name: packId,
+    })),
+  })
+})
+
+app.get('/api/plans/artifacts/:artifactFile', (req, res) => {
+  const artifactFile = req.params.artifactFile
+  const artifactPath = resolvePlanArtifact(artifactFile)
+  if (!artifactPath) {
+    return res.status(400).json({ error: 'invalid_artifact_file' })
+  }
+
+  const absolutePath = path.resolve(artifactPath)
+  if (!absolutePath.startsWith(DEMO_PLAN_ARTIFACTS_DIR)) {
+    return res.status(400).json({ error: 'invalid_artifact_file' })
+  }
+
+  if (!fs.existsSync(absolutePath)) {
+    return res.status(404).json({ error: 'artifact_file_missing' })
+  }
+
+  res.setHeader('Content-Type', 'audio/mpeg')
+  res.sendFile(absolutePath)
+})
+
+app.post('/api/packs/:packId/load', (req, res) => {
+  const packId = req.params.packId
+  const requestedVariant = typeof req.body?.musicVariant === 'string' ? req.body.musicVariant : undefined
+  const loaded = buildDemoPackRun(packId, { musicVariant: requestedVariant })
+
+  if (!loaded || !loaded.run) {
+    return res.status(404).json({ error: 'pack_not_found', packId })
+  }
+
+  loaded.run.options.tracePack = packId
+  runs.set(loaded.run.id, loaded.run)
+  pushTelemetry(loaded.run, 'run_pack_loaded', 'yolk', {
+    packId,
+    source: 'placeholder_pack',
+    factCount: loaded.facts.length,
+  })
+
+  res.json({
+    packId,
+    runId: loaded.run.id,
+    runState: loaded.runState,
+    messages: loaded.messages,
+    facts: loaded.facts,
+    passes: loaded.passes,
+    graph: loaded.graph,
+    songArtifact: loaded.songArtifact,
+    llmNotes: loaded.llmNotes,
+    placeholders: loaded.placeholders,
+  })
+})
+
+app.get('/api/packs/:packId/artifacts/:artifactFile', (req, res) => {
+  const packId = req.params.packId
+  const artifactFile = req.params.artifactFile
+
+  if (!isSupportedPack(packId) || artifactFile !== 'minimax-pop-song-with-lyrics.mp3') {
+    return res.status(404).json({ error: 'artifact_not_found' })
+  }
+
+  const packConfig = DEMO_PACKS[packId]
+  const artifactPath = path.join(DEMO_PLANS_DIR, packConfig.localArtifact)
+  if (!fs.existsSync(artifactPath)) {
+    return res.status(404).json({ error: 'artifact_file_missing' })
+  }
+
+  res.setHeader('Content-Type', 'audio/mpeg')
+  res.sendFile(artifactPath)
 })
 
 app.post('/api/run/egg', async (req, res) => {

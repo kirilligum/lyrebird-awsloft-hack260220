@@ -1,0 +1,12 @@
+{
+  "model": "music-2.5",
+  "prompt": "Dark techno track with urgent, neon, engineering energy. Build a disciplined, high-contrast rhythm with cinematic momentum and a club-forward bassline. Keep lyrics clearly intelligible and factual.",
+  "lyrics": "[Intro]\nHackathon grid is live; teams align in the glow of dashboards and terminals.\n[Verse 1]\nRaw Fact 1: The organizers posted a full prize breakdown for AWS, Datadog, Neo4j, MiniMax, and TestSprite tracks.\nRaw Fact 2: Some participants had private marketplace and IAM permission failures when attempting Bedrock access during setup.\nRaw Fact 3: Team members requested a direct AWS support contact and asked if a designated technical support channel existed for Bedrock and IAM issues.\n[Verse 2]\nRaw Fact 4: Bedrock inference calls were possible, but deploying services like EC2 was not working under many account permissions.\nRaw Fact 5: Lenka confirmed participants should submit a GitHub link, demo video, track selections, and product answers in the submission form.\n[Chorus]\nUpdated Fact 1: The event organizers posted a full prize breakdown for AWS (amazing), Datadog, Neo4j, MiniMax, and TestSprite tracks.\nUpdated Fact 6: CopilotKit (amazing) announced an updated prize of Meta Ray-Ban glasses for each member of the top two teams.\n[Bridge]\nFrom raw logs to ordered beats, support blockers to submissions, this is the sequence of the day.\n[Outro]\nEvery fact in the graph becomes rhythm, every beat keeps the run moving forward.\n",
+  "stream": false,
+  "output_format": "url",
+  "audio_setting": {
+    "sample_rate": 44100,
+    "bitrate": 256000,
+    "format": "mp3"
+  }
+}

@@ -20,7 +20,7 @@ test('localhost lyrebird debug render + flow', async ({ page }) => {
   await page.goto('/', { waitUntil: 'networkidle' })
   await page.screenshot({ path: 'test-results/manual/01-home.png', fullPage: true })
 
-  await expect(page.getByRole('heading', { name: 'Egg → Yolk → Albumen → Song' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Lyrebird' })).toBeVisible()
   await page.getByRole('button', { name: /Run Yolk/ }).click()
   await expect(page.getByText('Yolk produced explainable facts. Review and transform.')).toBeVisible()
 
@@ -29,17 +29,18 @@ test('localhost lyrebird debug render + flow', async ({ page }) => {
   await expect(page.getByText(/Find matched/)).toBeVisible()
 
   await page.getByRole('button', { name: '✍️' }).click()
-  await page.getByRole('button', { name: '✍️ Replace' }).click()
+  await page.getByRole('button', { name: 'Replace' }).click()
   await expect(page.getByText(/Replace completed/)).toBeVisible()
 
-  await page.getByRole('button', { name: /Run Albumen Pass/ }).click()
-  await expect(page.getByText(/Albumen pass applied/)).toBeVisible()
+  await page.locator('button', { hasText: 'Run Graph' }).click()
+  await expect(page.getByText('Graph built from profile/context input and atomic facts.')).toBeVisible()
 
-  await page.getByRole('button', { name: /Run Graph/ }).click()
-  await expect(page.getByText('Graph built from mock provenance and transform metadata.')).toBeVisible()
-
-  await page.getByRole('button', { name: /Generate Song/ }).click()
-  await expect(page.getByText('Song generated. You can now play the artifact below.', { exact: true })).toBeVisible({ timeout: 30000 })
+  await page.getByRole('button', { name: 'Load Song Placeholder' }).click()
+  await expect(page.getByText('Loaded reference track and queued playback.')).toBeVisible({ timeout: 30000 })
+  await expect(page.locator('.copilot-card:has(button[aria-label="Load Song Placeholder"]) audio')).toHaveAttribute(
+    'src',
+    /music_prod_tts-20260221103606-udrEprgbjcAeqNKa\.mp3/,
+  )
 
   await expect(page.locator('audio')).toBeVisible({ timeout: 30000 })
   await page.screenshot({ path: 'test-results/manual/02-flow-complete.png', fullPage: true })

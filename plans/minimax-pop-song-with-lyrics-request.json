@@ -1,0 +1,12 @@
+{
+  "model": "music-2.5",
+  "prompt": "Create a catchy, modern pop song with clear drums, bass, synths, and melody. Include the provided lyric lines as sung vocals, with a strong chorus and a clean build/drop. Keep it production-ready for judging playback.",
+  "lyrics": "[Verse 1]\nAWay of prizes came alive, organizers set the track for the night.\nAWS, Datadog, Neo4j, MiniMax, TestSprite lights.\n\n[Verse 2]\nSome hands were blocked on Bedrock, permissions made the setup feel tight.\nIAM gates and marketplace errors, still we kept the team on tight.\n\n[Pre-Chorus]\nQuestions hit the table: support lines where they could route and guide.\nInference kept the model humming while deployment sometimes got denied.\n\n[Chorus]\nSubmit link and demo to the form, plus tracks and product answers true,\nThe graph holds the facts and the beats all the way through.\n\n[Verse 3]\nWhen EC2 and ECS were locked, we shifted plans and worked as one.\nCopilotKit changed its prize and top teams caught the Ray-Ban sun.\n\n[Outro]\nFrom raw fact to final run, observability in the flow,\nLyrebird turns chaos into rhythm, letting every logbeat glow.\n",
+  "stream": false,
+  "output_format": "url",
+  "audio_setting": {
+    "sample_rate": 44100,
+    "bitrate": 256000,
+    "format": "mp3"
+  }
+}

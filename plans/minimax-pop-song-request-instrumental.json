@@ -1,0 +1,12 @@
+{
+  "model": "music-2.5",
+  "prompt": "Generate a pop track with full modern production (kick, bassline, keys, synth leads, drums), catchy melodies, and polished arrangement. This must be purely instrumental: no singing, no rap, no spoken words, no voice synthesis. Return only music. Keep it energetic and clean for judging playback.",
+  "lyrics": "[Instrumental only]",
+  "stream": false,
+  "output_format": "url",
+  "audio_setting": {
+    "sample_rate": 44100,
+    "bitrate": 256000,
+    "format": "mp3"
+  }
+}

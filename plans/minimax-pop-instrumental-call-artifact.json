@@ -1,0 +1,40 @@
+{
+  "runId": "discord-chat-hackathon-aws-lof",
+  "provider": "minimax",
+  "endpoint": "https://api.minimax.io/v1/music_generation",
+  "requestFile": "plans/minimax-pop-song-request-instrumental.json",
+  "request": {
+    "model": "music-2.5",
+    "prompt": "Generate a pop track with full modern production (kick, bassline, keys, synth leads, drums), catchy melodies, and polished arrangement. This must be purely instrumental: no singing, no rap, no spoken words, no voice synthesis. Return only music. Keep it energetic and clean for judging playback.",
+    "lyrics": "[Instrumental only]",
+    "stream": false,
+    "output_format": "url",
+    "audio_setting": {
+      "sample_rate": 44100,
+      "bitrate": 256000,
+      "format": "mp3"
+    }
+  },
+  "responseFile": "plans/minimax-pop-song-instrumental-response.json",
+  "response": {
+    "audio": "https://minimax-algeng-chat-tts-us.oss-us-east-1.aliyuncs.com/music%2Fprod%2Ftts-20260221103052-ABTqNFwfixEfcjln.mp3?Expires=1771727459&OSSAccessKeyId=LTAI5tCpJNKCf5EkQHSuL9xg&Signature=KVjssVue5MM9%2BM8e0swLyVQXHkw%3D",
+    "status": 2,
+    "trace_id": "05e84b62c3aede741c04a58ee8e96e8e",
+    "extra_info": {
+      "music_duration": 69668,
+      "music_sample_rate": 44100,
+      "music_channel": 2,
+      "bitrate": 256000,
+      "music_size": 2233647
+    },
+    "analysis_info": null,
+    "base_resp": {
+      "status_code": 0,
+      "status_msg": "success"
+    }
+  },
+  "status": "complete",
+  "style": "pop instrumental",
+  "ttsVerified": false,
+  "notes": "Used direct /v1/music_generation with prompt explicitly set to disable vocals and no voice synthesis."
+}

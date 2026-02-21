@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Outfit:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Baloo+2:wght@500;700;800&family=Playfair+Display:wght@600;700;800&family=Space+Grotesk:wght@500;700&family=Outfit:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap');
 
 :root {
   --bg-0: #fffaf0;
@@ -148,6 +148,52 @@ h3 {
   text-shadow: 0 2px 0 rgba(255, 255, 255, 0.36), 0 0 24px rgba(255, 255, 255, 0.34);
 }
 
+.hero-title {
+  font-family: 'Dancing Script', 'Great Vibes', 'Playfair Display', cursive;
+  font-size: clamp(7.6rem, 32vw, 12rem);
+  line-height: 1.2;
+  letter-spacing: 0.015em;
+  background: linear-gradient(120deg, #ff2eb8 0%, #d633ff 18%, #7f5cff 34%, #00e6ff 55%, #ffe13f 76%, #ff7aeb 96%);
+  background-size: 260% 260%;
+  animation: titleGlow 8s ease-in-out infinite;
+  -webkit-background-clip: text;
+  color: transparent;
+  text-shadow: none;
+  font-weight: 700;
+  display: inline-block;
+  padding: 1rem;
+  margin: 0;
+}
+
+.hero-subtitle {
+  margin: 0.9rem 0 0;
+  color: #5e5474;
+  font-size: clamp(1.2rem, 2.6vw, 1.6rem);
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+  text-align: center;
+  font-family: 'Baloo 2', 'Dancing Script', 'Outfit', sans-serif;
+  font-weight: 500;
+  opacity: 0.88;
+}
+
+@keyframes titleGlow {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.title-shell {
+  width: 100%;
+  text-align: center;
+  padding: 0.15rem 0.4rem 0.55rem;
+  margin: 0.15rem 0 0.85rem;
+  overflow: visible;
+}
+
 .kicker,
 .muted {
   color: var(--ink-3);
@@ -188,7 +234,7 @@ h3 {
   position: relative;
   overflow: hidden;
   border: 1px solid var(--card-border);
-  border-radius: 1rem;
+  border-radius: 0 0 1rem 1rem;
   padding: 1rem;
   background:
     linear-gradient(135deg, rgba(255, 46, 184, 0.24), rgba(0, 230, 255, 0.16), rgba(138, 255, 86, 0.15)),
@@ -219,6 +265,10 @@ h3 {
   gap: 0.8rem;
   margin-bottom: 0.75rem;
   flex-wrap: wrap;
+}
+
+.section-head h2 {
+  color: #36135a;
 }
 
 .section-head button,
@@ -297,6 +347,41 @@ textarea {
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: 0.7rem;
+}
+
+.button-row--compact {
+  gap: 0.35rem;
+}
+
+.placeholder-files,
+.llm-notes {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.22rem;
+  max-height: 180px;
+  overflow: auto;
+}
+
+.placeholder-files li {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0.55rem;
+  padding: 0.36rem 0.55rem;
+  background: rgba(255, 255, 255, 0.76);
+  color: #1f1641;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+}
+
+.placeholder-variants h3 {
+  margin: 0.55rem 0 0.25rem;
+  color: #3f2366;
+  font-size: 0.95rem;
+}
+
+.active-preset {
+  outline: 2px solid rgba(138, 255, 86, 0.85);
 }
 
 button {
@@ -549,6 +634,14 @@ button:disabled {
   fill: #ff2eb8;
 }
 
+.graph__node.profile {
+  fill: #ffb347;
+}
+
+.graph__node.context {
+  fill: #6ca4ff;
+}
+
 .graph__node.pass {
   fill: #ffe13f;
 }
@@ -557,10 +650,57 @@ button:disabled {
   fill: #24f3cc;
 }
 
+.graph__node {
+  fill: transparent !important;
+  stroke-width: 2.75;
+}
+
+.graph__node.run {
+  fill: transparent !important;
+  stroke: #00e6ff;
+}
+
+.graph__node.fact {
+  fill: transparent !important;
+  stroke: #ff2eb8;
+  stroke-dasharray: 2 2;
+}
+
+.graph__node.profile {
+  fill: transparent !important;
+  stroke: #ffb347;
+}
+
+.graph__node.context {
+  fill: transparent !important;
+  stroke: #6ca4ff;
+}
+
+.graph__node.pass {
+  fill: transparent !important;
+  stroke: #ffe13f;
+}
+
+.graph__node.song {
+  fill: transparent !important;
+  stroke: #24f3cc;
+}
+
+.graph__node.message {
+  fill: transparent !important;
+}
+
 .graph__label {
   font-size: 10px;
-  fill: #371f56;
   font-family: 'JetBrains Mono', 'Courier New', monospace;
+  fill: #21113e;
+  font-weight: 700;
+}
+
+.graph__label--fact {
+  font-size: 8px;
+  font-weight: 600;
+  fill: #341a50;
 }
 
 .music-controls {

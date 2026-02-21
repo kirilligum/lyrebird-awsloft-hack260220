@@ -133,6 +133,14 @@ MiniMax powers the **Song** stage:
   1. optional `POST /v1/lyrics_generation` (`mode: "write_full_song"`) to draft lyrics when a user asks for MiniMax.
   2. `POST /v1/music_generation` to produce the final playback artifact.
 
+- Live demo artifact from the hackathon facts pipeline (pop + lyrics):
+  - Generated track: [https://minimax-algeng-chat-tts-us.oss-us-east-1.aliyuncs.com/music%2Fprod%2Ftts-20260221103606-udrEprgbjcAeqNKa.mp3?Expires=1771727774&OSSAccessKeyId=LTAI5tCpJNKCf5EkQHSuL9xg&Signature=lnFzk%2BGZfr1u9vHthnM7Pj%2Ba4b8%3D](https://minimax-algeng-chat-tts-us.oss-us-east-1.aliyuncs.com/music%2Fprod%2Ftts-20260221103606-udrEprgbjcAeqNKa.mp3?Expires=1771727774&OSSAccessKeyId=LTAI5tCpJNKCf5EkQHSuL9xg&Signature=lnFzk%2BGZfr1u9vHthnM7Pj%2Ba4b8%3D)
+  - Generated from `plans/minimax-pop-song-with-lyrics-request.json` and saved in `plans/minimax-pop-song-with-lyrics-response.json`.
+  - Artifact JSON with lyrics for reuse: `plans/minimax-pop-song-with-lyrics-export.json`.
+  - This uses explicit `lyrics` content for vocal melody.
+  - Expires: `2026-02-22T02:36:14Z` (OSS pre-signed URL, replaceable on rerun).
+  - Local offline file stored for GitHub: `plans/artifacts/minimax-pop-song-with-lyrics.mp3`.
+
 - Configure locally with:
   - `MINIMAX_API_KEY` or `MINMAX_API_KEY`
   - `MINIMAX_API_HOST` (defaults to `https://api.minimax.io`)
@@ -161,6 +169,32 @@ CopilotKit patterns shape the entire user-facing experience:
 - Stage-based interactive controls and streaming action-oriented interface
 - Fact review and transform controls as structured UI components
 - Clear human-in-the-loop feedback loops over extracted and transformed content
+
+## Placeholder inventory and integration notes
+
+These are the active placeholder strings in the current code and how to integrate them:
+
+- `src/App.tsx:648`
+  - Placeholder text: `A CEO, engineer, or analyst persona can be used as context for fact extraction.`
+  - Integration: this is a UI helper hint for profile context. Replace with a role-aware dynamic hint from config if you want different instructions per use case.
+
+- `src/App.tsx:697`
+  - Placeholder text: `find term`
+  - Integration: this is the input hint for find pass terms. Keep for usability, or prefill from sponsor config so users can one-click fill sponsor entities.
+
+- `src/App.tsx:721`
+  - Placeholder text: `replace instruction`
+  - Integration: replace hint for replace pass action. To integrate with product logic, map this to validation/normalization rules before calling `runReplace`.
+
+- `src/App.tsx:686`
+  - `className="placeholder-button"` controls on quick-fill chips (`🔍`, `✍️`).
+  - Integration: currently seeds `sponsor` and `add 'amazing' to each sponsor name`; keep as seeded values or replace with a dynamic rule library.
+
+- `plans/front-end-music-iteration-plan.md:42`
+  - Placeholder phrase: `placeholder for future Discord connect`.
+  - Integration: this documents a planned mode in `REQ-101`. Add a new Egg mode and route to your Discord ingestion API when that integration is implemented.
+
+- Runtime behavior: there are no unresolved API key/URL placeholders in production-critical code beyond the `MINIMAX_API_KEY`/`MINMAX_API_KEY` env config path.
 
 ## Run locally
 

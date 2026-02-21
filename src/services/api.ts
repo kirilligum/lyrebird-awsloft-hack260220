@@ -5,6 +5,7 @@ import type {
   GraphData,
   Message,
   LLMCallSummary,
+  PackDemoPayload,
   RunState,
   SongArtifact,
   TelemetryEvent,
@@ -39,6 +40,14 @@ export async function fetchSimulatedLog(seed: string, messageCount: number) {
   }>(`/api/simulated-discord/log?${params.toString()}`)
 
   return data
+}
+
+export async function loadDemoPack(packId: string, options?: { musicVariant?: string }) {
+  const safePackId = packId.replace(/[^a-z0-9-]/gi, '-')
+  return requestJson<PackDemoPayload>(`/api/packs/${safePackId}/load`, {
+    method: 'POST',
+    body: JSON.stringify(options || {}),
+  })
 }
 
 export async function startEggRun(payload: {

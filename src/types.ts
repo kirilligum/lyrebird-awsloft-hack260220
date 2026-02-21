@@ -85,7 +85,7 @@ export type AlbumenPass = {
 export type GraphNode = {
   id: string
   label: string
-  type: 'run' | 'message' | 'fact' | 'pass' | 'song'
+  type: 'run' | 'message' | 'fact' | 'pass' | 'song' | 'profile' | 'context'
   [key: string]: unknown
 }
 
@@ -146,4 +146,66 @@ export type RunBundle = {
   songArtifact: SongArtifact | null
   version: number
   llmNotes?: LLMCallSummary[]
+}
+
+export type MusicPlaceholderVariant = {
+  id: string
+  label: string
+  requestFile: string
+  responseFile: string
+  responseHeadersFile?: string
+  callArtifactFile?: string
+  exportFile?: string
+}
+
+export type PlaceholderFindItem = {
+  factId?: string
+  text?: string
+  sourceMessageIds?: string[]
+  find?: string
+  [key: string]: unknown
+}
+
+export type PlaceholderReplaceItem = {
+  factId?: string
+  result?: string
+  find?: string
+  replace?: string
+  sourceMessageIds?: string[]
+  [key: string]: unknown
+}
+
+export type PackDemoPayload = {
+  packId: string
+  runId: string
+  runState: RunState
+  messages: Message[]
+  facts: Fact[]
+  passes: AlbumenPass[]
+  graph: GraphData
+  songArtifact: SongArtifact | null
+  llmNotes?: LLMCallSummary[]
+  placeholderFiles?: string[]
+  placeholders: {
+    placeholderFiles?: string[]
+    variantList?: MusicPlaceholderVariant[]
+    selectedMusicVariant?: string
+    rawFactsPath: string
+    findFactsPath: string
+    replaceFactsPath: string
+    finalGraphMusicPath: string
+    minimaxRequestPath: string
+    minimaxResponsePath: string
+    minimaxResponseHeadersPath?: string
+    minimaxCallArtifactPath: string
+    minimaxExportPath: string | null
+    findSeed: string
+    replaceSeed: string
+    musicPrompt: string
+    musicMood: string
+    musicPlaceholderTrackUrl?: string
+    responseHeadersAvailable: boolean
+    placeholderFindOutputs?: PlaceholderFindItem[]
+    placeholderReplaceOutputs?: PlaceholderReplaceItem[]
+  }
 }
