@@ -22,32 +22,11 @@ import type {
   SongArtifact,
   TelemetryEvent,
 } from './types'
-import { STAGES, formatDate, formatPercent } from './utils/format'
+import { formatDate, formatPercent } from './utils/format'
 import { seedFromText } from './utils/sampler'
 
 function CopilotFrame({ children }: { children: ReactNode }) {
   return <section className="copilot-card">{children}</section>
-}
-
-function StageTimeline({ stage }: { stage: string }) {
-  return (
-    <CopilotFrame>
-      <h2>Stage Progression</h2>
-      <ol className="timeline">
-        {STAGES.map((entry, index) => {
-          const active = entry === stage
-          const indexActive = STAGES.indexOf(stage as (typeof STAGES)[number])
-          const past = STAGES.indexOf(entry) < indexActive
-          return (
-            <li key={entry} className={`timeline__item ${active ? 'timeline__item--active' : ''} ${past ? 'timeline__item--past' : ''}`}>
-              <span className="timeline__index">{index + 1}</span>
-              <span>{entry}</span>
-            </li>
-          )
-        })}
-      </ol>
-    </CopilotFrame>
-  )
 }
 
 function MessageLog({
@@ -94,17 +73,27 @@ function FactPanel({
   facts,
   onToggle,
   onEdit,
+  onRun,
+  isBusy,
+  defaultLimit,
 }: {
   facts: Fact[]
   onToggle: (factId: string, status: Fact['status']) => void
   onEdit: (factId: string, text: string) => void
+  onRun: () => void
+  canRun: boolean
+  isBusy: boolean
+  defaultLimit: number
 }) {
   return (
     <CopilotFrame>
       <div className="section-head">
-        <h2>Facts Board</h2>
-        <span>{facts.length} facts</span>
+        <h2>Yolk Raw Facts</h2>
+        <button onClick={onRun} disabled={isBusy || !canRun}>
+          {isBusy ? 'Running...' : 'Run Yolk'}
+        </button>
       </div>
+      <p className="muted">{facts.length} fact(s) requested up to {defaultLimit}</p>
       <div className="fact-list">
         {facts.map((fact) => (
           <article className="fact" key={fact.id}>
@@ -128,7 +117,7 @@ function FactPanel({
             </div>
           </article>
         ))}
-        {!facts.length && <p className="muted">Run Egg and Yolk to populate facts.</p>}
+        {!facts.length && <p className="muted">{`Run Yolk to extract up to ${defaultLimit} facts from the transcript.`}</p>}
       </div>
     </CopilotFrame>
   )
@@ -324,10 +313,10 @@ export function App() {
   const [ruleFind, setRuleFind] = useState('emails')
   const [ruleReplace, setRuleReplace] = useState('[REDACTED]')
   const [ruleAction, setRuleAction] = useState<'replace' | 'pii_remove' | 'rewrite_tone'>('replace')
+  const [yolkFactLimit, setYolkFactLimit] = useState(5)
   const [isBusy, setIsBusy] = useState(false)
   const [message, setMessage] = useState('')
 
-  const stage = runState?.stage || 'idle'
   const canSeed = Boolean(seed)
 
   function addLLMNote(note?: LLMCallSummary | null) {
@@ -358,12 +347,12 @@ export function App() {
     }
   }
 
-  async function startEgg() {
-    setMessage('')
+  async function extractFacts() {
     setIsBusy(true)
+    setMessage('')
 
     try {
-      const result = await startEggRun({
+      const egg = await startEggRun({
         mode,
         seed,
         messageCount,
@@ -371,35 +360,25 @@ export function App() {
         promptHint: 'generate factual song track from mock Discord run',
       })
 
-      setRunId(result.runId)
-      setRunState(result.runState)
-      setMessages(result.messages)
+      setRunId(egg.runId)
+      setRunState(egg.runState)
+      setMessages(egg.messages)
       setFacts([])
       setPasses([])
       setSongArtifact(null)
       setGraph(null)
       setLlmNotes([])
-      addLLMNote(result.llm)
-      setMessage('Egg complete. Run Yolk for extraction.')
-      await refreshDebug(result.runId)
-    } catch (error) {
-      setMessage(`Egg failed: ${error instanceof Error ? error.message : String(error)}`)
-    } finally {
-      setIsBusy(false)
-    }
-  }
+      addLLMNote(egg.llm)
 
-  async function extractFacts() {
-    if (!runId) return
-    setIsBusy(true)
+      const result = await runYolk(egg.runId, {
+        factLimit: yolkFactLimit,
+      })
 
-    try {
-      const result = await runYolk(runId)
       setRunState(result.runState)
       setFacts(result.facts)
       addLLMNote(result.llm)
       setMessage('Yolk produced explainable facts. Review and transform.')
-      await refreshDebug(runId)
+      await refreshDebug(egg.runId)
     } catch (error) {
       setMessage(`Yolk failed: ${error instanceof Error ? error.message : String(error)}`)
     } finally {
@@ -555,24 +534,36 @@ export function App() {
               />
               <strong>{messageCount}</strong>
             </label>
+            <label className="control-row">
+              <span>Yolk Fact Count</span>
+              <input
+                type="number"
+                min={1}
+                max={50}
+                value={yolkFactLimit}
+                onChange={(event) => {
+                  const nextValue = Number.parseInt(event.target.value, 10)
+                  setYolkFactLimit(Math.max(1, Math.min(50, Number.isNaN(nextValue) ? 5 : nextValue)))
+                }}
+              />
+            </label>
             {mode === 'paste' && (
               <label className="control-row">
                 <span>Transcript</span>
                 <textarea value={transcript} onChange={(event) => setTranscript(event.target.value)} />
               </label>
             )}
-            <div className="button-row">
-              <button onClick={startEgg} disabled={isBusy || !canSeed}>
-                {isBusy ? 'Running...' : 'Run Egg'}
-              </button>
-              <button onClick={extractFacts} disabled={isBusy || !runId}>
-                Run Yolk
-              </button>
-              <button onClick={handleSeedPreview} disabled={isBusy || !canSeed}>
-                Preview Log
-              </button>
-            </div>
           </CopilotFrame>
+
+          <FactPanel
+            facts={facts}
+            onToggle={handleFactStatus}
+            onEdit={handleFactEdit}
+            onRun={extractFacts}
+            canRun={canSeed}
+            isBusy={isBusy}
+            defaultLimit={yolkFactLimit}
+          />
 
           <CopilotFrame>
             <div className="section-head">
@@ -608,11 +599,7 @@ export function App() {
             </div>
           </CopilotFrame>
 
-          <StageTimeline stage={stage} />
-
           {message && <p className="status-banner">{message}</p>}
-
-          <FactPanel facts={facts} onToggle={handleFactStatus} onEdit={handleFactEdit} />
           <GraphPanel graph={graph} />
           <MusicPanel songArtifact={songArtifact} onGenerate={generateSong} inProgress={isBusy} disabled={!runId} />
           <TelemetryPanel events={telemetry} />

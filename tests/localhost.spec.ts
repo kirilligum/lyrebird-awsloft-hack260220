@@ -7,9 +7,6 @@ test('localhost lyrebird demo flow', async ({ page }) => {
 
   await expect(page.getByRole('heading', { name: 'Egg → Yolk → Albumen → Song' })).toBeVisible()
 
-  await page.getByRole('button', { name: 'Run Egg' }).click()
-  await expect(page.getByText('Egg complete. Run Yolk for extraction.')).toBeVisible()
-
   await page.getByRole('button', { name: 'Run Yolk' }).click()
   await expect(page.getByText('Yolk produced explainable facts. Review and transform.')).toBeVisible()
 

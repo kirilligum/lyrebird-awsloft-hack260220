@@ -21,20 +21,25 @@ Lyrebird satisfies the event’s core constraints:
 
 ```mermaid
 flowchart TD
-  U[🐣 User opens Lyrebird] --> I[🥚 Input: Egg]
-  I -->|🧠 Generate synthetic hackathon transcript| E1[🧪 Egg run created]
-  I -->|📋 Paste transcript| E2[📝 Egg ingests manual transcript]
-  E1 --> Y[🧬 Yolk extraction]
-  E2 --> Y
+  U[🐣 User opens Lyrebird]
+  U --> I[⚡ Choose Egg input mode]
+
+  subgraph Egg["🥚 Egg"]
+    I -->|🧠 Generate synthetic transcript| E1[🧪 Egg run created]
+    I -->|📋 Paste transcript| E2[📝 Egg ingests manual transcript]
+    E1 --> C[📄 Context]
+    E2 --> C
+    U --> P[👤 Profile]
+    C --> Y[🧬 Yolk extraction]
+    P --> Y
+    Y --> A[🍳 Albumen pass 1]
+  end
+
   Y --> F["🧾 Fact Board\n(explain-first)"]
-  F --> P[🍳 Albumen pass 1]
-  P --> R{🔁 Need another pass?}
-  R -->|✅ Yes| P
+  F --> R{🔁 Need another pass?}
+  R -->|✅ Yes| A
   R -->|❌ No| G[🕸️ Graph build and visualization]
   G --> M[🎧 MiniMax song generation]
-  M --> L[🎵 Lyric sheet + audio playback]
-  L --> D[📡 Datadog trace review + debug]
-  D --> X[💾 Export run bundle]
 ```
 
 ### What this means for judges
@@ -45,7 +50,7 @@ flowchart TD
 4. **Albumen** applies configurable pass rules (PII redaction, replacements, tone rewriting) and tracks per-pass diffs.
 5. The system writes run artifacts into a **knowledge graph** so every transformation is traceable.
 6. **Song generation** creates a factual lyric sheet and playable audio output from approved facts.
-7. A **debug lane** surfaces run traces, latency, and quality signals, then exports full run state for review.
+7. The run can be inspected for traces, latency, and quality signals, with full run state available for review.
 
 ## System architecture
 

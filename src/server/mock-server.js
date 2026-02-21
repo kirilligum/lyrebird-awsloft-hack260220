@@ -10,10 +10,12 @@ const PORT = Number(process.env.MOCK_SERVER_PORT || 3001)
 const MINIMAX_API_KEY = process.env.MINIMAX_API_KEY || process.env.MINMAX_API_KEY || ''
 const MINIMAX_API_HOST = process.env.MINIMAX_API_HOST || 'https://api.minimax.io'
 const MINIMAX_MOCK_ONLY = process.env.MINIMAX_MOCK_ONLY === 'true' || process.env.MINIMAX_MOCK_ONLY === '1'
-const MINIMAX_REQUEST_TIMEOUT_MS = Number(process.env.MINIMAX_REQUEST_TIMEOUT_MS || '2200')
+const MINIMAX_REQUEST_TIMEOUT_MS = Number(process.env.MINIMAX_REQUEST_TIMEOUT_MS || '12000')
 const DEFAULT_MOCK_TOKEN = 'mock'
 const DISCORD_FIXTURE_PATH = path.resolve(process.cwd(), 'src', 'data', 'simulated-discord-log.json')
 const MAX_SIMULATED_MESSAGES = 360
+const DEFAULT_YOLK_FACT_LIMIT = 5
+const MAX_YOLK_FACT_LIMIT = 50
 
 let discordFixtureCache = null
 
@@ -377,30 +379,46 @@ async function mockLLM(task, payload) {
 }
 
 function buildSongLyricsFromFacts(facts, prompt, mood) {
-  const cleaned = facts.slice(0, 24)
+  const cleaned = facts.slice(0, 18)
   const safePrompt = clampText(String(prompt || 'a realistic hackathon operation report'), 120)
   const safeMood = clampText(String(mood || 'playful'), 80)
-  const topicLines = cleaned.length
+  const factsSection = cleaned.length
     ? cleaned.map((fact, index) => `${index + 1}. ${fact.text}`)
     : ['No extracted fact artifacts were available for this run.']
 
-  const intro = [
+  const hook = [
     '[Intro]',
     `[Verse 1]`,
-    `${safePrompt} moved the team out of idle mode.`,
-    `Telemetry stayed stable, and review kept cadence.`,
-    `Confidence stayed visible, then tightened with each pass.`,
-    ...topicLines.slice(0, 5).map((line) => `- ${line}`),
+    `${safePrompt} moved the run from data noise to reliable outputs.`,
+    `A ${safeMood} tempo keeps the cycle readable.`,
+    `Confidence stayed transparent through every transformation pass.`,
+    'We pulled signal from the log, then turned it into structure.',
+    ...factsSection.slice(0, 4).map((line) => `- ${line}`),
   ]
 
-  const bridge = [
-    '[Bridge]',
-    `At ${safeMood} tempo, the board stayed aligned,`,
-    'Evidence passed checks and confidence stayed high.',
-    `From ${topicLines.length} extracted threads, ${Math.min(topicLines.length, 4)} are now locked for song.`,
+  const verse = [
+    '[Verse 2]',
+    `The audit lane stayed open while facts kept their provenance tags.`,
+    `Messages mapped to claims, and claims mapped to checks.`,
+    `Graph edges carried evidence for each decision the team made.`,
+    ...factsSection.slice(4, 10).map((line) => `- ${line}`),
+  ]
+
+  const preChorus = [
+    '[Pre-Chorus]',
+    'If a pass changed a fact, the trace preserved every diff.',
+    'Albumen rules rewrote with intent, not entropy.',
+    'If risk appeared, we flagged it and moved it to the next lane.',
   ]
 
   const chorus = [
+    '[Bridge]',
+    `At ${safeMood} tempo, the board stayed aligned,`,
+    'Evidence passed checks and confidence stayed high.',
+    `From ${factsSection.length} extracted threads, ${Math.min(factsSection.length, 6)} were locked for music.`,
+  ]
+
+  const chorusDrop = [
     '[Chorus]',
     'Keep the signal high and keep the context clear.',
     'Every message maps to a trace you can review.',
@@ -410,7 +428,7 @@ function buildSongLyricsFromFacts(facts, prompt, mood) {
 
   const outro = [
     '[Outro]',
-    `From seed to song, ${topicLines.length} milestones mapped and verified.`,
+    `From seed to song, ${factsSection.length} milestones mapped and verified.`,
     `Final mood: ${safeMood}.`,
     'This is production-shaped confidence in a beat.',
     'If the data is good, the output sounds good.',
@@ -418,11 +436,12 @@ function buildSongLyricsFromFacts(facts, prompt, mood) {
 
   const instrumental = [
     '[Instrumental]',
-    'Layered synth and snare, with a clean mix hold.',
-    'Crowd noise fades, bassline moves.',
+    'Layered synth, crisp snare, and rounded sub bass rise.',
+    'Crowd noise fades, bassline moves, tempo stays controlled.',
+    `Prompt context: ${safePrompt} with ${Math.min(factsSection.length, 6)} highlighted checkpoints.`,
   ]
 
-  return [...intro, '', ...bridge, '', ...chorus, '', ...instrumental, '', ...outro].join('\n').slice(0, 3500)
+  return [...hook, '', ...preChorus, '', ...verse, '', ...chorus, '', ...chorusDrop, '', ...instrumental, '', ...outro].join('\n').slice(0, 3500)
 }
 
 function scoreToConfidence(score) {
@@ -485,7 +504,7 @@ function parseTranscript(transcript = '') {
     })
 }
 
-async function extractFactsFromMessages(messages, version = 1) {
+async function extractFactsFromMessages(messages, version = 1, factLimit = DEFAULT_YOLK_FACT_LIMIT) {
   const llmPass = await mockLLM('fact_extraction', {
     messageCount: messages.length,
     sample: messages.slice(0, 4).map((message) => message.content).join(' '),
@@ -493,8 +512,12 @@ async function extractFactsFromMessages(messages, version = 1) {
 
   const facts = []
   const seen = new Set()
+  const safeFactLimit = parseIntSafe(factLimit, DEFAULT_YOLK_FACT_LIMIT, 1, MAX_YOLK_FACT_LIMIT)
 
   for (const message of messages) {
+    if (facts.length >= safeFactLimit) {
+      break
+    }
     const fact = buildFactFromMessage(message, seen, version)
 
     if (!fact) {
@@ -704,13 +727,17 @@ async function callMiniMax(endpoint, payload, headers, timeoutMs = MINIMAX_REQUE
     controller.abort(new Error('minimax_timeout'))
   }, Math.max(350, timeoutMs))
 
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(payload),
-    signal: controller.signal,
-  })
-  clearTimeout(timeout)
+  let response
+  try {
+    response = await fetch(endpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    })
+  } finally {
+    clearTimeout(timeout)
+  }
 
   if (!response.ok) {
     const text = await response.text().catch(() => '')
@@ -736,7 +763,12 @@ async function generateMiniMaxLyrics(body) {
     Accept: 'application/json',
   }
 
-  const json = await callMiniMax(endpoint, payload, requestHeaders, Math.max(1200, Math.min(2000, MINIMAX_REQUEST_TIMEOUT_MS)))
+  const json = await callMiniMax(
+    endpoint,
+    payload,
+    requestHeaders,
+    Math.max(3000, Math.round(MINIMAX_REQUEST_TIMEOUT_MS * 0.6)),
+  )
   const generated = normalizeMiniMaxLyrics(json)
   return generated || null
 }
@@ -769,7 +801,12 @@ async function generateMiniMaxTrack(run, body) {
     Accept: 'application/json',
   }
 
-  const json = await callMiniMax(endpoint, payload, requestHeaders, Math.max(1800, Math.min(2800, MINIMAX_REQUEST_TIMEOUT_MS)))
+  const json = await callMiniMax(
+    endpoint,
+    payload,
+    requestHeaders,
+    Math.max(6000, Math.round(MINIMAX_REQUEST_TIMEOUT_MS * 0.9)),
+  )
   const trackUrl = normalizeMiniMaxTrack(json)
 
   if (!trackUrl) {
@@ -913,7 +950,8 @@ app.post('/api/run/:runId/yolk', async (req, res) => {
     run.updatedAt = Date.now()
     pushTelemetry(run, 'run_yolk_started', 'yolk', {})
 
-    const { facts, llmPass } = await extractFactsFromMessages(run.messages, run.version)
+    const factLimit = parseIntSafe(req.body?.factLimit, DEFAULT_YOLK_FACT_LIMIT, 1, MAX_YOLK_FACT_LIMIT)
+    const { facts, llmPass } = await extractFactsFromMessages(run.messages, run.version, factLimit)
     const seededFacts = facts.map((fact) => ({ ...fact, provenance: { ...fact.provenance, runId: run.id } }))
     run.yolkFacts = seededFacts
     addLLMNote(run, 'yolk', llmPass, { source: 'mock-llm' })
@@ -921,7 +959,10 @@ app.post('/api/run/:runId/yolk', async (req, res) => {
     run.updatedAt = Date.now()
     run.stage = 'yolk'
 
-    pushTelemetry(run, 'run_yolk_ready', 'yolk', { factCount: run.yolkFacts.length })
+    pushTelemetry(run, 'run_yolk_ready', 'yolk', {
+      factCount: run.yolkFacts.length,
+      factLimit,
+    })
 
     res.json({
       runId: run.id,

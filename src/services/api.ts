@@ -62,14 +62,24 @@ export async function startEggRun(payload: {
   return data
 }
 
-export async function runYolk(runId: string) {
+export async function runYolk(
+  runId: string,
+  payload: {
+    factLimit?: number
+  } = {},
+) {
   const data = await requestJson<{
     runId: string
     stage: string
     facts: Fact[]
     runState: RunState
     llm?: LLMCallSummary
-  }>(`/api/run/${runId}/yolk`, { method: 'POST', body: JSON.stringify({}) })
+  }>(`/api/run/${runId}/yolk`, {
+    method: 'POST',
+    body: JSON.stringify({
+      factLimit: payload.factLimit,
+    }),
+  })
 
   return data
 }

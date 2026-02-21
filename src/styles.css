@@ -168,43 +168,6 @@ button:disabled {
   color: #fca5a5;
 }
 
-.timeline {
-  display: flex;
-  gap: 0.5rem;
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.timeline__item {
-  flex: 1;
-  text-align: center;
-  padding: 0.55rem 0.45rem;
-  border-radius: 0.65rem;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  color: var(--muted);
-  display: grid;
-  gap: 0.35rem;
-}
-
-.timeline__index {
-  margin: 0 auto;
-  width: 1.75rem;
-  aspect-ratio: 1;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.timeline__item--past {
-  color: #c7f9dc;
-}
-
-.timeline__item--active {
-  border-color: var(--accent);
-  background: rgba(52, 211, 153, 0.18);
-  color: #f0fff7;
-}
-
 .message-log {
   display: grid;
   gap: 0.45rem;
