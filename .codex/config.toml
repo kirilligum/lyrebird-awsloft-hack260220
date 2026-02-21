@@ -55,6 +55,10 @@ PLAYWRIGHT_MCP_EXTENSION_TOKEN = "KY0fy8Dkhfz-widg_brHs9m_i3seEOEtx33a_siYHvg"
 url = "https://api.githubcopilot.com/mcp/"
 bearer_token_env_var = "GITHUB_PAT"
 startup_timeout_sec = 155.0
+
+[mcp_servers.copilotkit]
+url = "https://mcp.copilotkit.ai/sse"
+startup_timeout_sec = 30.0
 #
 # [mcp_servers.gcloud]
 # command = "npx"
@@ -104,6 +108,55 @@ args = [
   "--api-key",
   "ctx7sk-97194507-0230-4151-9a87-badcc829cd7f",
 ]
+startup_timeout_sec = 155.0
+
+[mcp_servers.testsprite]
+command = "fish"
+args = [
+  "-lc",
+  "API_KEY=\"$TESTSPRITE_API_KEY\" npx -y @testsprite/testsprite-mcp@latest",
+]
+startup_timeout_sec = 155.0
+
+[mcp_servers.minimax]
+command = "fish"
+args = [
+  "-lc",
+  "set -l _minimax_api_key \"$MINIMAX_API_KEY\"; if test -z \"$_minimax_api_key\"; and test -n \"$MINMAX_API_KEY\"; set _minimax_api_key \"$MINMAX_API_KEY\"; end; set -l _minimax_api_host https://api.minimax.io; if test -n \"$MINIMAX_API_HOST\"; set _minimax_api_host \"$MINIMAX_API_HOST\"; end; env MINIMAX_API_KEY=\"$_minimax_api_key\" MINIMAX_API_HOST=\"$_minimax_api_host\" uvx minimax-coding-plan-mcp -y",
+]
+startup_timeout_sec = 155.0
+
+[mcp_servers.neo4j]
+command = "fish"
+args = [
+  "-lc",
+  "set -l _db neo4j; if test -n \"$NEO4J_DATABASE\"; set _db \"$NEO4J_DATABASE\"; end; env NEO4J_URI=\"$NEO4J_URI\" NEO4J_USERNAME=\"$NEO4J_USERNAME\" NEO4J_PASSWORD=\"$NEO4J_PASSWORD\" NEO4J_DATABASE=\"$_db\" \"$HOME/.local/bin/neo4j-mcp\"",
+]
+startup_timeout_sec = 155.0
+
+[mcp_servers.strands]
+command = "uvx"
+args = ["strands-agents-mcp-server"]
+startup_timeout_sec = 155.0
+
+[mcp_servers.aws-api]
+command = "fish"
+args = [
+  "-lc",
+  "set -l _aws_region us-west-2; if test -n \"$AWS_DEFAULT_REGION\"; set _aws_region \"$AWS_DEFAULT_REGION\"; else if test -n \"$AWS_REGION\"; set _aws_region \"$AWS_REGION\"; end; env AWS_REGION=\"$_aws_region\" AWS_DEFAULT_REGION=\"$_aws_region\" AWS_ACCESS_KEY_ID=\"$AWS_ACCESS_KEY_ID\" AWS_SECRET_ACCESS_KEY=\"$AWS_SECRET_ACCESS_KEY\" AWS_SESSION_TOKEN=\"$AWS_SESSION_TOKEN\" uvx awslabs.aws-api-mcp-server@latest",
+]
+startup_timeout_sec = 155.0
+
+[mcp_servers.aws-agentcore]
+command = "fish"
+args = [
+  "-lc",
+  "env FASTMCP_LOG_LEVEL=ERROR uvx awslabs.amazon-bedrock-agentcore-mcp-server@latest",
+]
+startup_timeout_sec = 155.0
+
+[mcp_servers.datadog]
+url = "https://mcp.us5.datadoghq.com/api/unstable/mcp-server/mcp"
 startup_timeout_sec = 155.0
 
 # [mcp_servers.paper-search-mcp]

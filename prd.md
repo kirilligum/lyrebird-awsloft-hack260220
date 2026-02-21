@@ -685,6 +685,33 @@ list recent errors and likely fixes
 Datadog MCP Server is a preview bridge between Datadog observability data and MCP-supporting agents/clients and is allowlist-gated; it is not supported for production use during preview.
 Datadog also documents MCP client monitoring with LLM Observability, including tracing lifecycle steps and tool invocation errors.
 
+ECS/Fargate Datadog baseline (from current AWS account setup)
+
+If any Lyrebird service is deployed on ECS Fargate, use the proven sidecar pattern:
+
+IAM roles:
+
+DatadogTaskRole with ECS read permissions (`ecs:ListClusters`, `ecs:ListContainerInstances`, `ecs:DescribeContainerInstances`)
+
+DatadogTaskExecutionRole with `secretsmanager:GetSecretValue` for the Datadog API key secret ARN
+
+Task definition pattern:
+
+`datadog-agent` container (`public.ecr.aws/datadog/agent:latest`) with APM enabled and `ECS_FARGATE=true`
+
+`datadog-log-router` container (`public.ecr.aws/aws-observability/aws-for-fluent-bit:stable`) with FireLens
+
+application container with `DD_TRACE_AGENT_URL=unix:///var/run/datadog/apm.socket`
+
+shared `dd-sockets` volume mounted into agent and app container
+
+log output via `awsfirelens` to Datadog intake for the active site (current setup uses `us5.datadoghq.com`)
+
+Security requirement:
+
+Do not place Datadog API keys directly in task-definition environment variables.
+Store API keys in AWS Secrets Manager and inject via ECS `secrets` mapping at runtime.
+
 15. Testing & QA (TestSprite 11A)
     Test strategy
 
@@ -730,6 +757,10 @@ S3: artifact store (lyrics/audio)
 CloudFront + S3 (or Amplify): frontend hosting
 
 Secrets Manager: MiniMax API key + Neo4j creds + Datadog keys
+
+MCP endpoints configured for local development/debugging:
+
+Datadog MCP endpoint for current site: `https://mcp.us5.datadoghq.com/api/unstable/mcp-server/mcp`
 
 17. Success Metrics (hackathon + product)
     Demo success (binary)
